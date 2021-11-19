@@ -1,0 +1,2500 @@
+<script>
+	////////////////Highlighted Area Global Variables/////////////
+
+  var janPosition = 299.49919;
+  var febPosition = 438.49919;
+  var marPosition = 587.49919;
+  var aplPosition = 742.49919;
+  var mayPosition = 894.49919;
+  var junePosition = 1047.49919;
+  var julyPosition = 1200.49919;
+  var augPosition = 1356.49919;
+  var sepPosition = 1511.49919;
+  var octPosition = 1660.49919;
+  var novPosition = 1812.49919;
+  var decPosition = 1963.49919;
+  var highlitedWidth = 150;
+  var a = 1900;
+  var maxMenuWidth = 157;
+
+////////////////Gantt Chart Global variables/////////////
+
+	var plData = {};
+  var rowData = [];
+  var ganttHeight = 500;
+  var projectCount = 0;
+  var viewWidth = 1900;
+  var titleMaxLength = 60;
+  var titleCharWidth = 8;
+  var ganttDefaultView = 120;  // percentage zoom
+  var ganttTitlesWidth = titleMaxLength * titleCharWidth;
+  var maxStages = 10;
+  var lifecycleStages = getLifecycleStages();
+
+  $(document).ready(function(){
+    $(function() {
+      $("#Sfull_date").datepicker({ dateFormat: 'dd-mm-yy' });
+      $("#Efull_date").datepicker({ dateFormat: 'dd-mm-yy' });
+      $("#S_date").datepicker({ dateFormat: 'dd-mm-yy' });
+      $("#E_date").datepicker({ dateFormat: 'dd-mm-yy' });
+      $("#SA_date").datepicker({ dateFormat: 'dd-mm-yy' });
+      $("#EA_date").datepicker({ dateFormat: 'dd-mm-yy' });
+    });
+  });
+
+  $(document).ready(function() {
+
+      bindControls();
+
+      initProjectsData();
+      
+      buildProjectsTable("all");
+
+      buildProjectsGantt("all");
+
+      jQuery('#zoomin').click();
+
+      // kanbanBoardsData();
+
+  });
+
+  function getLifecycleStages(){781.49919
+    return {
+      "Conception" : "conception",
+      "Feasibility" : "feasibility",
+      "Outline Scoping" : "outline_scoping",
+      "Initial Planning" : "initial_planning",
+      "Reqs Capture" : "reqs_capture",
+      "Specs / Estimates" : "specs_estimates",
+      "Delivery Planning" : "delivery_planning",
+      "Under Development" : "under_dev",
+      "Code Complete" : "code_complete",
+      "Live" : "live"
+    }
+  }
+
+  function showRoadmap(){
+    $('#projects_table_container').hide();
+    $('#gantt_container').show();
+    $('#zoombtn').show();
+
+    var projectType = $('#project_type').val();
+    $('#chart_div').empty();
+    rowData = buildGanttRows(projectType);
+    if(rowData.length > 0){
+      setDimensions(a,ganttTitlesWidth,ganttDefaultView);
+      drawCharts();
+    }
+  }
+
+  function showProjectTable(){
+    $('#projects_table_container').show();
+    $('#gantt_container').hide();
+    $('#zoombtn').hide();
+  }
+
+  function bindControls() {
+
+    // Allow switching between gantt and project table in aggregate view
+    
+    // $('.view_button').click(function() {
+    //   var selectedView = this.id;
+    //   console.log
+      
+    //   $('#aggregate_view').show();
+    //   $('#project_view').hide();
+
+    //   if (selectedView == 'project_list') {
+    //       $('#projects_table_container').show();
+    //       $('#gantt_container').hide();
+
+    //   } else if (selectedView == 'roadmap') {
+
+    //       $('#projects_table_container').hide();
+    //       $('#gantt_container').show();
+
+    //       var projectType = $('#project_type').val();
+    //       $('#chart_div').empty();
+    //       rowData = buildGanttRows(projectType);
+    //       if(rowData.length > 0){
+    //         setDimensions(viewWidth,ganttTitlesWidth,ganttDefaultView);
+    //         drawCharts();
+    //       }
+          
+          
+    //   }
+    // });
+
+    // Update project table and gantt when project type changes
+    $('#project_type').change(function() {
+        var projectType = $('#project_type').val();
+        
+        $('#chart_div').empty();
+        rowData = buildGanttRows(projectType);
+        if(rowData.length > 0){
+          setDimensions(a,ganttTitlesWidth,ganttDefaultView);
+          drawCharts();
+        }
+
+        $('#projects_table_container').empty();
+        buildProjectsTable(projectType, "projects_table_container");
+        $('#projects_table').DataTable();
+    });
+
+    // Setup date pickers
+    // $("#start_date").datepicker();
+    // $("#end_date").datepicker();
+
+    // Back buttons shown on project view
+    // $(".back_button").click( function( ) { 
+    //   hideProject();
+    // } );
+
+    // Dragable gantt chart to support zooming
+    $('#gantt_drag_box').draggable({
+      axis: "x",
+      drag: function(event, ui) {
+        var leftPosition = ui.position.left;
+        if (leftPosition > maxMenuWidth) {
+            ui.position.left = maxMenuWidth;
+        }
+      }
+      // containment: $('#gantt_view')
+    });
+  }
+
+
+  function initProjectsData(){
+    eval("plData = " + $('#dataDiv').html());
+    // console.error('!!!!'+plData);
+  }
+
+  function buildProjectsTable(projectType) {
+    // console.log(projectType)
+    //$('#projects_table_container').width(viewWidth);
+    var rowCount = plData.projectsData.length;
+    var table_body = '<table id="projects_table" class="table table-striped table-sm table-hover table-bordered mx-auto">';
+    table_body += '<thead>';
+    table_body += '<th>Project</th>';
+    table_body += '<th></th>';
+    table_body += '<th>Lifecycle Stage</th>';
+    table_body += '</tr>';
+    table_body += '</thead>';
+    table_body += '<tbody>';
+
+    try{    
+      for (var i = 0; i < rowCount; i++) {
+        if (plData.projectsData[i][4] == projectType || projectType == "all") {
+          var projectId = plData.projectsData[i][0];
+          var projectTitle = plData.projectsData[i][5];
+          var projectStage = plData.projectsData[i][6];
+          var showProject = plData.projectsData[i][11];
+          var stageImgUrl = "https://storage.googleapis.com/cloudiq-noticeboard/public/pl_" + lifecycleStages[projectStage] + "_s.png";
+//<a onclick="showProject(' + projectId +  ')" href="#"></a>
+          if(projectId != null && showProject == "TRUE"){
+            table_body += '<tr>';
+            table_body += '<td>' + projectTitle + '</td>';
+            table_body += '<td class="stageImgSmTd"><img class="stageImgSm" src="' + stageImgUrl + '"/></td>';
+            table_body += '<td>' + projectStage + '</td>';
+            table_body += '</tr>';
+          //}else{
+          // console.log("Not showing project : " + projectId + " because showProject was " + showProject);
+          }       
+        }
+      }
+    }catch(e){
+      console.log(e);
+    }
+
+    table_body += '</tbody>';
+    table_body += '</table>';
+
+    $('#projects_table_container').html(table_body);
+    $('#projects_table').DataTable();
+
+  }
+
+  function buildProjectsGantt(projectType){
+
+    rowData = buildGanttRows(projectType);  // rowData defined in global scope above
+    projectCount = rowData.length;
+    ganttRowHeight = 42; 
+    ganttHeight = (projectCount + 1) * ganttRowHeight;  // ganttHeight is defined in global scope above
+
+    setDimensions(viewWidth,ganttTitlesWidth,ganttDefaultView);
+
+    google.charts.load('current', {
+        'packages': ['gantt']
+    });  
+    
+    google.charts.setOnLoadCallback(drawCharts);
+
+  }
+
+  function daysToMilliseconds(days) {
+      return days * 24 * 60 * 60 * 1000;
+  }
+
+  function setDimensions(ganttViewWidth,ganttTitlesWidth, ganttViewPercent){ // (600,200, 80)
+    var ganttViewLeftCorrection = 3;
+
+    $('#gantt_container').width(ganttViewWidth);
+    
+    $('.gantt_titles_div').width(((ganttTitlesWidth+4) - ganttViewLeftCorrection)-192); // ------>>>>>>>>> Changes
+    $('.gantt_titles_div').height(ganttHeight);
+
+    $('#gantt_title_mask_div').width(ganttTitlesWidth);
+    
+    var ganttBarsWidth = (100/ganttViewPercent) * ganttViewWidth; // 750
+
+    var ganttBarsOverlap = ganttBarsWidth - ganttViewWidth; // 150
+    var ganttInnerContainerWidth = ganttBarsWidth + ganttBarsOverlap + ganttTitlesWidth;	// 750 + 150 + 100 = 1000
+    //var ganttInnerContainerWidth = ganttBarsWidth + ganttBarsOverlap;		
+
+    $('#gantt_inner_container').width(ganttInnerContainerWidth); // 750
+    $('#gantt_inner_container').css({left:-(ganttBarsOverlap+195)}); // -150 ------>>>>>>>>> Changes
+
+    $('#gantt_view').width(ganttBarsWidth + ganttTitlesWidth - 20); // 750 + 200 + 10 = 960 
+    $('#gantt_drag_box').width(ganttBarsWidth+200);  // ------>>>>>>>>> Changes
+    
+    
+    var ganttViewOffset = ganttBarsOverlap/2;  // 150 / 2 = 75
+    $('#gantt_view').css({left:-ganttViewOffset}); // -75
+    var ganttViewLeftCorrection = 3;
+    $('#gantt_view').css({left:-((ganttTitlesWidth-190) - ganttViewLeftCorrection)}); // -75 ------>>>>>>>>> Changes
+
+    var dragBoxOffset = ganttViewOffset - ganttTitlesWidth;  // 75 - 200 = -125
+    dragBoxOffset = ganttBarsOverlap + ganttTitlesWidth // 150 + 200 = 350
+    $('#gantt_drag_box').css({left:dragBoxOffset});
+  }  
+  
+  //function buildGanttRows(projectType, startDate, endDate, showDeps) {
+  function buildGanttRows(projectType) {
+    var rowData = [];
+    var projectIds = [];
+
+    //console.log(plData.projectsData);
+   
+    // Build list of projectIds for later check if dependencies are present
+    // Missing dependencies will cause the graph to fail
+    plData.projectsData.forEach(function(project, index) {
+      var projectId = project[0];
+      if (project[3] == projectType || projectType === "all") {
+          projectIds.push(projectId);
+      }
+    });
+
+    
+    plData.projectsData.forEach(function(project, index) {
+      if (project[4] == projectType || projectType === "all") {
+        var projectId = project[0];
+        var showProject = project[11];
+
+        if(projectId != null && showProject == "TRUE"){
+          var projectTitle = project[5].substring(0,titleMaxLength);
+          var sd = null;
+          var ed = null;
+          var startDate = null;
+          var endDate = null;
+
+          if (project[1] != "" && project[1] != null){
+            sd = project[1].split("-");
+            startDate = new Date(sd[2],sd[1]-1,sd[0]);
+          }
+          
+          if (project[2] != "" && project[2] != null){
+            ed = project[2].split("-");
+            endDate = new Date(ed[2],ed[1]-1,ed[0]);          
+          }
+
+          var duration = null;
+          if (project[3] != "" && project[3] != null){
+            duration = parseInt(project[3])*1000*3600*24;
+          }
+          // console.log("Duration: '" + duration + "'");
+          var percentComplete = parseInt(project[9]);
+          var depends = null;  // graph needs empty null value column when not present
+
+          if (project[10] != "" && project[10] != null){
+            var dependenciesPresent = false;    
+            // Handle case where only one dependency  
+            if (project[9].indexOf(',') > -1){ 
+              // console.log("1 dep");
+              var dependIds = project[10].split(",");
+              dependIds.foreach(function(dependId){
+                if(projectIds.includes(dependId)){
+                  dependenciesPresent = true; 
+                }else{
+                  dependenciesPresent = false;  
+                }
+              });                                              
+            }else{
+              // console.log("more than 1 dep");
+              if(projectIds.includes(project[10])){
+                dependenciesPresent = true; 
+              }else{
+                dependenciesPresent = false;  
+              }
+            }                                                 
+            if (dependenciesPresent) {
+                depends = project[10];
+            }
+          }
+          var row = [projectId, projectTitle, null, startDate, endDate, duration, percentComplete, depends];
+          rowData.push(row);
+
+        //}else{
+        //  console.log("Project not added: " + projectId);
+        }
+        
+      } 
+    });
+    return rowData;
+  }
+
+  function drawCharts() {
+    // var data = new google.visualization.DataTable();
+    // data.addColumn('string', 'Task ID');
+    // data.addColumn('string', 'Task Name');
+    // data.addColumn('string', 'Resource');
+    // data.addColumn('date', 'Start Date');
+    // data.addColumn('date', 'End Date');
+    // data.addColumn('number', 'Duration');
+    // data.addColumn('number', 'Percent Complete');
+    // data.addColumn('string', 'Dependencies');
+
+    // data.addRows(rowData);
+
+    // // console.log(rowData);
+    // var options = {
+    //   height: ganttHeight
+    // };
+
+    // var container = document.getElementById('chart_div');
+    // var chart = new google.visualization.Gantt(container); 
+    
+    // google.visualization.events.addListener(chart, 'select', function(){
+    //     var selections = chart.getSelection();
+    //     var projectId = data.getValue(selections[0].row,0)
+    //     showProject(projectId);
+    //     getresourcesData(projectId);
+    //     getMotivationData(projectId);
+    //     getstatusSummaryData(projectId);
+    //     getdates(projectId);
+    //     getFullData(projectId);
+    //     getSingleData(projectId);
+
+    var container = document.getElementById('chart_div');
+    var chart = new google.visualization.Gantt(container);
+
+    var dataTable = new google.visualization.DataTable();
+    dataTable.addColumn('string', 'Task ID');
+    dataTable.addColumn('string', 'Task Name');
+    dataTable.addColumn('string', 'Resource');
+    dataTable.addColumn('date', 'Start Date');
+    dataTable.addColumn('date', 'End Date');
+    dataTable.addColumn('number', 'Duration');
+    dataTable.addColumn('number', 'Percent Complete');
+    dataTable.addColumn('string', 'Dependencies');
+    dataTable.addRows(rowData);
+    
+    var dateRangeStart = dataTable.getColumnRange(3);
+    // console.log('GanttS:',dateRangeStart);
+    var dateRangeEnd = dataTable.getColumnRange(4);
+    // console.log('GanttE:',dateRangeEnd);
+    var formatDate = new google.visualization.DateFormat({
+      pattern: 'dd/MM/yyyy'
+    });
+
+    var options = {
+      height: ganttHeight
+    };
+
+    function drawChart() {
+      chart.draw(dataTable, options);
+      var titlesContainer = document.getElementById('gantt_titles_inner');
+      var titlesChart = new google.visualization.Gantt(titlesContainer);                          
+      titlesChart.draw(dataTable, options);
+    }
+    
+    function addLiner(markerDate) {
+      var baseline;
+      var baselineBounds;
+      var chartElements;
+      var markerLabel;
+      var markerLine;
+      var markerSpan;
+      var svg;
+      var timeline;
+      var timelineUnit;
+      var timelineWidth;
+      var timespan;
+
+      baseline = null;
+      timeline = null;
+      svg = null;
+      markerLabel = null;
+      chartElements = container.getElementsByTagName('svg');
+      if (chartElements.length > 0) {
+        svg = chartElements[0];
+      }
+      chartElements = container.getElementsByTagName('rect');
+      if (chartElements.length > 0) {
+        timeline = chartElements[0];
+      }
+      chartElements = container.getElementsByTagName('path');
+      if (chartElements.length > 0) {
+        baseline = chartElements[0];
+      }
+      chartElements = container.getElementsByTagName('text');
+      if (chartElements.length > 0) {
+        markerLabel = chartElements[0].cloneNode(true);
+      }
+      if ((svg === null) || (timeline === null) || (baseline === null) || (markerLabel === null) ||
+          (markerDate.getTime() < dateRangeStart.min.getTime()) ||
+          (markerDate.getTime() > dateRangeEnd.max.getTime())) {
+        return;
+      }
+
+      // calculate placement
+      timelineWidth = parseFloat(timeline.getAttribute('width'));
+      baselineBounds = baseline.getBBox();
+      timespan = dateRangeEnd.max.getTime() - dateRangeStart.min.getTime();
+      timelineUnit = (timelineWidth - baselineBounds.x) / timespan;
+      markerSpan = markerDate.getTime() - dateRangeStart.min.getTime();
+
+      // add label
+      // markerLabel.setAttribute('fill', '#e91e63');
+      // markerLabel.setAttribute('y', options.height);
+      // markerLabel.setAttribute('x', (baselineBounds.x + (timelineUnit * markerSpan)));
+      // markerLabel.textContent = formatDate.formatValue(markerDate);
+      // svg.appendChild(markerLabel);
+
+      // add line
+
+      var currentdate = new Date();
+      var cur_month = currentdate.getMonth() + 1;
+      var cur_year = currentdate.getFullYear();
+
+
+      if(cur_month == 1){
+        markerLine = timeline.cloneNode(true);
+        markerLine.setAttribute('y', 0);
+        markerLine.setAttribute('x', (janPosition));
+        markerLine.setAttribute('height', options.height);
+        markerLine.setAttribute('width', highlitedWidth);
+        markerLine.setAttribute('stroke', 'none');
+        markerLine.setAttribute('stroke-width', '0');
+        markerLine.setAttribute('fill', '#e91e63');
+        markerLine.setAttribute('id', 'month10');
+        svg.appendChild(markerLine);
+
+        document.getElementById('zoomin').onclick = function(){
+          zoomIn();
+          var textBoxPos = document.getElementById("text10");
+          textBoxPos.value = janPosition;
+          janPosition+=1;
+          var textBoxVal = document.getElementById("text10").value;
+
+          var textBoxWidth = document.getElementById("textWidth10");
+          textBoxWidth.value = highlitedWidth;
+          highlitedWidth+=3;
+          var textBoxWidthV = document.getElementById("textWidth10").value;
+
+          markerLine = timeline.cloneNode(true);
+          markerLine.setAttribute('y', 0);
+          markerLine.setAttribute('x', (textBoxVal));
+          markerLine.setAttribute('height', options.height);
+          markerLine.setAttribute('width', textBoxWidthV);
+          markerLine.setAttribute('stroke', 'none');
+          markerLine.setAttribute('stroke-width', '0');
+          markerLine.setAttribute('fill', '#e91e63');
+          markerLine.setAttribute('id', 'month10');
+          svg.appendChild(markerLine);
+        }
+
+        document.getElementById('zoomout').onclick = function(){
+          zoomOut();
+          var textBoxPos = document.getElementById("text10");
+          textBoxPos.value = janPosition;
+          janPosition-=1;
+          var textBoxVal = document.getElementById("text10").value;
+
+          var textBoxWidth = document.getElementById("textWidth10");
+          textBoxWidth.value = highlitedWidth;
+          highlitedWidth-=3;
+          var textBoxWidthV = document.getElementById("textWidth10").value;
+
+          markerLine = timeline.cloneNode(true);
+          markerLine.setAttribute('y', 0);
+          markerLine.setAttribute('x', (textBoxVal));
+          markerLine.setAttribute('height', options.height);
+          markerLine.setAttribute('width', textBoxWidthV);
+          markerLine.setAttribute('stroke', 'none');
+          markerLine.setAttribute('stroke-width', '0');
+          markerLine.setAttribute('fill', '#e91e63');
+          markerLine.setAttribute('id', 'month10');
+          svg.appendChild(markerLine);
+        }
+      }
+
+      if(cur_month == 2){
+        markerLine = timeline.cloneNode(true);
+        markerLine.setAttribute('y', 0);
+        markerLine.setAttribute('x', (febPosition));
+        markerLine.setAttribute('height', options.height);
+        markerLine.setAttribute('width', highlitedWidth);
+        markerLine.setAttribute('stroke', 'none');
+        markerLine.setAttribute('stroke-width', '0');
+        markerLine.setAttribute('fill', '#e91e63');
+        markerLine.setAttribute('id', 'month10');
+        svg.appendChild(markerLine);
+
+        document.getElementById('zoomin').onclick = function(){
+          zoomIn();
+          var textBoxPos = document.getElementById("text10");
+          textBoxPos.value = febPosition;
+          febPosition+=3;
+          var textBoxVal = document.getElementById("text10").value;
+
+          var textBoxWidth = document.getElementById("textWidth10");
+          textBoxWidth.value = highlitedWidth;
+          highlitedWidth+=3;
+          var textBoxWidthV = document.getElementById("textWidth10").value;
+
+          markerLine = timeline.cloneNode(true);
+          markerLine.setAttribute('y', 0);
+          markerLine.setAttribute('x', (textBoxVal));
+          markerLine.setAttribute('height', options.height);
+          markerLine.setAttribute('width', textBoxWidthV);
+          markerLine.setAttribute('stroke', 'none');
+          markerLine.setAttribute('stroke-width', '0');
+          markerLine.setAttribute('fill', '#e91e63');
+          markerLine.setAttribute('id', 'month10');
+          svg.appendChild(markerLine);
+        }
+
+        document.getElementById('zoomout').onclick = function(){
+          zoomOut();
+          var textBoxPos = document.getElementById("text10");
+          textBoxPos.value = febPosition;
+          febPosition-=3;
+          var textBoxVal = document.getElementById("text10").value;
+
+          var textBoxWidth = document.getElementById("textWidth10");
+          textBoxWidth.value = highlitedWidth;
+          highlitedWidth-=3;
+          var textBoxWidthV = document.getElementById("textWidth10").value;
+
+          markerLine = timeline.cloneNode(true);
+          markerLine.setAttribute('y', 0);
+          markerLine.setAttribute('x', (textBoxVal));
+          markerLine.setAttribute('height', options.height);
+          markerLine.setAttribute('width', textBoxWidthV);
+          markerLine.setAttribute('stroke', 'none');
+          markerLine.setAttribute('stroke-width', '0');
+          markerLine.setAttribute('fill', '#e91e63');
+          markerLine.setAttribute('id', 'month10');
+          svg.appendChild(markerLine);
+        }
+      }
+
+      if(cur_month == 3){
+        markerLine = timeline.cloneNode(true);
+        markerLine.setAttribute('y', 0);
+        markerLine.setAttribute('x', (marPosition));
+        markerLine.setAttribute('height', options.height);
+        markerLine.setAttribute('width', highlitedWidth);
+        markerLine.setAttribute('stroke', 'none');
+        markerLine.setAttribute('stroke-width', '0');
+        markerLine.setAttribute('fill', '#e91e63');
+        markerLine.setAttribute('id', 'month10');
+        svg.appendChild(markerLine);
+
+        document.getElementById('zoomin').onclick = function(){
+          zoomIn();
+          var textBoxPos = document.getElementById("text10");
+          textBoxPos.value = marPosition;
+          marPosition+=6;
+          var textBoxVal = document.getElementById("text10").value;
+
+          var textBoxWidth = document.getElementById("textWidth10");
+          textBoxWidth.value = highlitedWidth;
+          highlitedWidth+=5;
+          var textBoxWidthV = document.getElementById("textWidth10").value;
+
+          markerLine = timeline.cloneNode(true);
+          markerLine.setAttribute('y', 0);
+          markerLine.setAttribute('x', (textBoxVal));
+          markerLine.setAttribute('height', options.height);
+          markerLine.setAttribute('width', textBoxWidthV);
+          markerLine.setAttribute('stroke', 'none');
+          markerLine.setAttribute('stroke-width', '0');
+          markerLine.setAttribute('fill', '#e91e63');
+          markerLine.setAttribute('id', 'month10');
+          svg.appendChild(markerLine);
+        }
+
+        document.getElementById('zoomout').onclick = function(){
+          zoomOut();
+          var textBoxPos = document.getElementById("text10");
+          textBoxPos.value = marPosition;
+          marPosition-=6;
+          var textBoxVal = document.getElementById("text10").value;
+
+          var textBoxWidth = document.getElementById("textWidth10");
+          textBoxWidth.value = highlitedWidth;
+          highlitedWidth-=5;
+          var textBoxWidthV = document.getElementById("textWidth10").value;
+
+          markerLine = timeline.cloneNode(true);
+          markerLine.setAttribute('y', 0);
+          markerLine.setAttribute('x', (textBoxVal));
+          markerLine.setAttribute('height', options.height);
+          markerLine.setAttribute('width', textBoxWidthV);
+          markerLine.setAttribute('stroke', 'none');
+          markerLine.setAttribute('stroke-width', '0');
+          markerLine.setAttribute('fill', '#e91e63');
+          markerLine.setAttribute('id', 'month10');
+          svg.appendChild(markerLine);
+        }
+      }
+
+      if(cur_month == 4){
+        markerLine = timeline.cloneNode(true);
+        markerLine.setAttribute('y', 0);
+        markerLine.setAttribute('x', (aplPosition));
+        markerLine.setAttribute('height', options.height);
+        markerLine.setAttribute('width', highlitedWidth);
+        markerLine.setAttribute('stroke', 'none');
+        markerLine.setAttribute('stroke-width', '0');
+        markerLine.setAttribute('fill', '#e91e63');
+        markerLine.setAttribute('id', 'month10');
+        svg.appendChild(markerLine);
+
+        document.getElementById('zoomin').onclick = function(){
+          zoomIn();
+          var textBoxPos = document.getElementById("text10");
+          textBoxPos.value = aplPosition;
+          aplPosition+=10;
+          var textBoxVal = document.getElementById("text10").value;
+
+          var textBoxWidth = document.getElementById("textWidth10");
+          textBoxWidth.value = highlitedWidth;
+          highlitedWidth+=4;
+          var textBoxWidthV = document.getElementById("textWidth10").value;
+
+          markerLine = timeline.cloneNode(true);
+          markerLine.setAttribute('y', 0);
+          markerLine.setAttribute('x', (textBoxVal));
+          markerLine.setAttribute('height', options.height);
+          markerLine.setAttribute('width', textBoxWidthV);
+          markerLine.setAttribute('stroke', 'none');
+          markerLine.setAttribute('stroke-width', '0');
+          markerLine.setAttribute('fill', '#e91e63');
+          markerLine.setAttribute('id', 'month10');
+          svg.appendChild(markerLine);
+        }
+
+        document.getElementById('zoomout').onclick = function(){
+          zoomOut();
+          var textBoxPos = document.getElementById("text10");
+          textBoxPos.value = aplPosition;
+          aplPosition-=10;
+          var textBoxVal = document.getElementById("text10").value;
+
+          var textBoxWidth = document.getElementById("textWidth10");
+          textBoxWidth.value = highlitedWidth;
+          highlitedWidth-=4;
+          var textBoxWidthV = document.getElementById("textWidth10").value;
+
+          markerLine = timeline.cloneNode(true);
+          markerLine.setAttribute('y', 0);
+          markerLine.setAttribute('x', (textBoxVal));
+          markerLine.setAttribute('height', options.height);
+          markerLine.setAttribute('width', textBoxWidthV);
+          markerLine.setAttribute('stroke', 'none');
+          markerLine.setAttribute('stroke-width', '0');
+          markerLine.setAttribute('fill', '#e91e63');
+          markerLine.setAttribute('id', 'month10');
+          svg.appendChild(markerLine);
+        }
+      }
+
+      if(cur_month == 5){
+        markerLine = timeline.cloneNode(true);
+        markerLine.setAttribute('y', 0);
+        markerLine.setAttribute('x', (mayPosition));
+        markerLine.setAttribute('height', options.height);
+        markerLine.setAttribute('width', highlitedWidth);
+        markerLine.setAttribute('stroke', 'none');
+        markerLine.setAttribute('stroke-width', '0');
+        markerLine.setAttribute('fill', '#e91e63');
+        markerLine.setAttribute('id', 'month10');
+        svg.appendChild(markerLine);
+
+        document.getElementById('zoomin').onclick = function(){
+          zoomIn();
+          var textBoxPos = document.getElementById("text10");
+          textBoxPos.value = mayPosition;
+          mayPosition+=14;
+          var textBoxVal = document.getElementById("text10").value;
+
+          var textBoxWidth = document.getElementById("textWidth10");
+          textBoxWidth.value = highlitedWidth;
+          highlitedWidth+=4;
+          var textBoxWidthV = document.getElementById("textWidth10").value;
+
+          markerLine = timeline.cloneNode(true);
+          markerLine.setAttribute('y', 0);
+          markerLine.setAttribute('x', (textBoxVal));
+          markerLine.setAttribute('height', options.height);
+          markerLine.setAttribute('width', textBoxWidthV);
+          markerLine.setAttribute('stroke', 'none');
+          markerLine.setAttribute('stroke-width', '0');
+          markerLine.setAttribute('fill', '#e91e63');
+          markerLine.setAttribute('id', 'month10');
+          svg.appendChild(markerLine);
+        }
+
+        document.getElementById('zoomout').onclick = function(){
+          zoomOut();
+          var textBoxPos = document.getElementById("text10");
+          textBoxPos.value = mayPosition;
+          mayPosition-=14;
+          var textBoxVal = document.getElementById("text10").value;
+
+          var textBoxWidth = document.getElementById("textWidth10");
+          textBoxWidth.value = highlitedWidth;
+          highlitedWidth-=4;
+          var textBoxWidthV = document.getElementById("textWidth10").value;
+
+          markerLine = timeline.cloneNode(true);
+          markerLine.setAttribute('y', 0);
+          markerLine.setAttribute('x', (textBoxVal));
+          markerLine.setAttribute('height', options.height);
+          markerLine.setAttribute('width', textBoxWidthV);
+          markerLine.setAttribute('stroke', 'none');
+          markerLine.setAttribute('stroke-width', '0');
+          markerLine.setAttribute('fill', '#e91e63');
+          markerLine.setAttribute('id', 'month10');
+          svg.appendChild(markerLine);
+        }
+      }
+
+      if(cur_month == 6){
+        markerLine = timeline.cloneNode(true);
+        markerLine.setAttribute('y', 0);
+        markerLine.setAttribute('x', (junePosition));
+        markerLine.setAttribute('height', options.height);
+        markerLine.setAttribute('width', highlitedWidth);
+        markerLine.setAttribute('stroke', 'none');
+        markerLine.setAttribute('stroke-width', '0');
+        markerLine.setAttribute('fill', '#e91e63');
+        markerLine.setAttribute('id', 'month10');
+        svg.appendChild(markerLine);
+
+        document.getElementById('zoomin').onclick = function(){
+          zoomIn();
+          var textBoxPos = document.getElementById("text10");
+          textBoxPos.value = junePosition;
+          junePosition+=17;
+          var textBoxVal = document.getElementById("text10").value;
+
+          var textBoxWidth = document.getElementById("textWidth10");
+          textBoxWidth.value = highlitedWidth;
+          highlitedWidth+=4;
+          var textBoxWidthV = document.getElementById("textWidth10").value;
+
+          markerLine = timeline.cloneNode(true);
+          markerLine.setAttribute('y', 0);
+          markerLine.setAttribute('x', (textBoxVal));
+          markerLine.setAttribute('height', options.height);
+          markerLine.setAttribute('width', textBoxWidthV);
+          markerLine.setAttribute('stroke', 'none');
+          markerLine.setAttribute('stroke-width', '0');
+          markerLine.setAttribute('fill', '#e91e63');
+          markerLine.setAttribute('id', 'month10');
+          svg.appendChild(markerLine);
+        }
+
+        document.getElementById('zoomout').onclick = function(){
+          zoomOut();
+          var textBoxPos = document.getElementById("text10");
+          textBoxPos.value = junePosition;
+          junePosition-=17;
+          var textBoxVal = document.getElementById("text10").value;
+
+          var textBoxWidth = document.getElementById("textWidth10");
+          textBoxWidth.value = highlitedWidth;
+          highlitedWidth-=4;
+          var textBoxWidthV = document.getElementById("textWidth10").value;
+
+          markerLine = timeline.cloneNode(true);
+          markerLine.setAttribute('y', 0);
+          markerLine.setAttribute('x', (textBoxVal));
+          markerLine.setAttribute('height', options.height);
+          markerLine.setAttribute('width', textBoxWidthV);
+          markerLine.setAttribute('stroke', 'none');
+          markerLine.setAttribute('stroke-width', '0');
+          markerLine.setAttribute('fill', '#e91e63');
+          markerLine.setAttribute('id', 'month10');
+          svg.appendChild(markerLine);
+        }
+      }
+
+      if(cur_month == 7){
+        markerLine = timeline.cloneNode(true);
+        markerLine.setAttribute('y', 0);
+        markerLine.setAttribute('x', (julyPosition));
+        markerLine.setAttribute('height', options.height);
+        markerLine.setAttribute('width', highlitedWidth);
+        markerLine.setAttribute('stroke', 'none');
+        markerLine.setAttribute('stroke-width', '0');
+        markerLine.setAttribute('fill', '#e91e63');
+        markerLine.setAttribute('id', 'month10');
+        svg.appendChild(markerLine);
+
+        document.getElementById('zoomin').onclick = function(){
+          zoomIn();
+          var textBoxPos = document.getElementById("text10");
+          textBoxPos.value = julyPosition;
+          julyPosition+=21;
+          var textBoxVal = document.getElementById("text10").value;
+
+          var textBoxWidth = document.getElementById("textWidth10");
+          textBoxWidth.value = highlitedWidth;
+          highlitedWidth+=4;
+          var textBoxWidthV = document.getElementById("textWidth10").value;
+
+          markerLine = timeline.cloneNode(true);
+          markerLine.setAttribute('y', 0);
+          markerLine.setAttribute('x', (textBoxVal));
+          markerLine.setAttribute('height', options.height);
+          markerLine.setAttribute('width', textBoxWidthV);
+          markerLine.setAttribute('stroke', 'none');
+          markerLine.setAttribute('stroke-width', '0');
+          markerLine.setAttribute('fill', '#e91e63');
+          markerLine.setAttribute('id', 'month10');
+          svg.appendChild(markerLine);
+        }
+
+        document.getElementById('zoomout').onclick = function(){
+          zoomOut();
+          var textBoxPos = document.getElementById("text10");
+          textBoxPos.value = julyPosition;
+          julyPosition-=21;
+          var textBoxVal = document.getElementById("text10").value;
+
+          var textBoxWidth = document.getElementById("textWidth10");
+          textBoxWidth.value = highlitedWidth;
+          highlitedWidth-=4;
+          var textBoxWidthV = document.getElementById("textWidth10").value;
+
+          markerLine = timeline.cloneNode(true);
+          markerLine.setAttribute('y', 0);
+          markerLine.setAttribute('x', (textBoxVal));
+          markerLine.setAttribute('height', options.height);
+          markerLine.setAttribute('width', textBoxWidthV);
+          markerLine.setAttribute('stroke', 'none');
+          markerLine.setAttribute('stroke-width', '0');
+          markerLine.setAttribute('fill', '#e91e63');
+          markerLine.setAttribute('id', 'month10');
+          svg.appendChild(markerLine);
+        }
+      }
+
+      if(cur_month == 8){
+        markerLine = timeline.cloneNode(true);
+        markerLine.setAttribute('y', 0);
+        markerLine.setAttribute('x', (augPosition));
+        markerLine.setAttribute('height', options.height);
+        markerLine.setAttribute('width', highlitedWidth);
+        markerLine.setAttribute('stroke', 'none');
+        markerLine.setAttribute('stroke-width', '0');
+        markerLine.setAttribute('fill', '#e91e63');
+        markerLine.setAttribute('id', 'month10');
+        svg.appendChild(markerLine);
+
+        document.getElementById('zoomin').onclick = function(){
+          zoomIn();
+          var textBoxPos = document.getElementById("text10");
+          textBoxPos.value = augPosition;
+          augPosition+=25;
+          var textBoxVal = document.getElementById("text10").value;
+
+          var textBoxWidth = document.getElementById("textWidth10");
+          textBoxWidth.value = highlitedWidth;
+          highlitedWidth+=4;
+          var textBoxWidthV = document.getElementById("textWidth10").value;
+
+          markerLine = timeline.cloneNode(true);
+          markerLine.setAttribute('y', 0);
+          markerLine.setAttribute('x', (textBoxVal));
+          markerLine.setAttribute('height', options.height);
+          markerLine.setAttribute('width', textBoxWidthV);
+          markerLine.setAttribute('stroke', 'none');
+          markerLine.setAttribute('stroke-width', '0');
+          markerLine.setAttribute('fill', '#e91e63');
+          markerLine.setAttribute('id', 'month10');
+          svg.appendChild(markerLine);
+        }
+
+        document.getElementById('zoomout').onclick = function(){
+          zoomOut();
+          var textBoxPos = document.getElementById("text10");
+          textBoxPos.value = augPosition;
+          augPosition-=25;
+          var textBoxVal = document.getElementById("text10").value;
+
+          var textBoxWidth = document.getElementById("textWidth10");
+          textBoxWidth.value = highlitedWidth;
+          highlitedWidth-=4;
+          var textBoxWidthV = document.getElementById("textWidth10").value;
+
+          markerLine = timeline.cloneNode(true);
+          markerLine.setAttribute('y', 0);
+          markerLine.setAttribute('x', (textBoxVal));
+          markerLine.setAttribute('height', options.height);
+          markerLine.setAttribute('width', textBoxWidthV);
+          markerLine.setAttribute('stroke', 'none');
+          markerLine.setAttribute('stroke-width', '0');
+          markerLine.setAttribute('fill', '#e91e63');
+          markerLine.setAttribute('id', 'month10');
+          svg.appendChild(markerLine);
+        }
+      }
+
+      if(cur_month == 9){
+        markerLine = timeline.cloneNode(true);
+        markerLine.setAttribute('y', 0);
+        markerLine.setAttribute('x', (sepPosition));
+        markerLine.setAttribute('height', options.height);
+        markerLine.setAttribute('width', highlitedWidth);
+        markerLine.setAttribute('stroke', 'none');
+        markerLine.setAttribute('stroke-width', '0');
+        markerLine.setAttribute('fill', '#e91e63');
+        markerLine.setAttribute('id', 'month10');
+        svg.appendChild(markerLine);
+
+        document.getElementById('zoomin').onclick = function(){
+          zoomIn();
+          var textBoxPos = document.getElementById("text10");
+          textBoxPos.value = sepPosition;
+          sepPosition+=28;
+          var textBoxVal = document.getElementById("text10").value;
+
+          var textBoxWidth = document.getElementById("textWidth10");
+          textBoxWidth.value = highlitedWidth;
+          highlitedWidth+=4;
+          var textBoxWidthV = document.getElementById("textWidth10").value;
+
+          markerLine = timeline.cloneNode(true);
+          markerLine.setAttribute('y', 0);
+          markerLine.setAttribute('x', (textBoxVal));
+          markerLine.setAttribute('height', options.height);
+          markerLine.setAttribute('width', textBoxWidthV);
+          markerLine.setAttribute('stroke', 'none');
+          markerLine.setAttribute('stroke-width', '0');
+          markerLine.setAttribute('fill', '#e91e63');
+          markerLine.setAttribute('id', 'month10');
+          svg.appendChild(markerLine);
+        }
+
+        document.getElementById('zoomout').onclick = function(){
+          zoomOut();
+          var textBoxPos = document.getElementById("text10");
+          textBoxPos.value = sepPosition;
+          sepPosition-=28;
+          var textBoxVal = document.getElementById("text10").value;
+
+          var textBoxWidth = document.getElementById("textWidth10");
+          textBoxWidth.value = highlitedWidth;
+          highlitedWidth-=4;
+          var textBoxWidthV = document.getElementById("textWidth10").value;
+
+          markerLine = timeline.cloneNode(true);
+          markerLine.setAttribute('y', 0);
+          markerLine.setAttribute('x', (textBoxVal));
+          markerLine.setAttribute('height', options.height);
+          markerLine.setAttribute('width', textBoxWidthV);
+          markerLine.setAttribute('stroke', 'none');
+          markerLine.setAttribute('stroke-width', '0');
+          markerLine.setAttribute('fill', '#e91e63');
+          markerLine.setAttribute('id', 'month10');
+          svg.appendChild(markerLine);
+        }
+      }
+
+      if(cur_month == 10){
+        markerLine = timeline.cloneNode(true);
+        markerLine.setAttribute('y', 0);
+        markerLine.setAttribute('x', (octPosition));
+        markerLine.setAttribute('height', options.height);
+        markerLine.setAttribute('width', highlitedWidth);
+        markerLine.setAttribute('stroke', 'none');
+        markerLine.setAttribute('stroke-width', '0');
+        markerLine.setAttribute('fill', '#e91e63');
+        markerLine.setAttribute('id', 'month10');
+        svg.appendChild(markerLine);
+
+        document.getElementById('zoomin').onclick = function(){
+          zoomIn();
+          var textBoxPos = document.getElementById("text10");
+          textBoxPos.value = octPosition;
+          octPosition+=32;
+          var textBoxVal = document.getElementById("text10").value;
+
+          var textBoxWidth = document.getElementById("textWidth10");
+          textBoxWidth.value = highlitedWidth;
+          highlitedWidth+=3;
+          var textBoxWidthV = document.getElementById("textWidth10").value;
+
+          markerLine = timeline.cloneNode(true);
+          markerLine.setAttribute('y', 0);
+          markerLine.setAttribute('x', (textBoxVal));
+          markerLine.setAttribute('height', options.height);
+          markerLine.setAttribute('width', textBoxWidthV);
+          markerLine.setAttribute('stroke', 'none');
+          markerLine.setAttribute('stroke-width', '0');
+          markerLine.setAttribute('fill', '#e91e63');
+          markerLine.setAttribute('id', 'month10');
+          svg.appendChild(markerLine);
+        }
+
+        document.getElementById('zoomout').onclick = function(){
+          zoomOut();
+          var textBoxPos = document.getElementById("text10");
+          textBoxPos.value = octPosition;
+          octPosition-=32;
+          var textBoxVal = document.getElementById("text10").value;
+
+          var textBoxWidth = document.getElementById("textWidth10");
+          textBoxWidth.value = highlitedWidth;
+          highlitedWidth-=3;
+          var textBoxWidthV = document.getElementById("textWidth10").value;
+
+          markerLine = timeline.cloneNode(true);
+          markerLine.setAttribute('y', 0);
+          markerLine.setAttribute('x', (textBoxVal));
+          markerLine.setAttribute('height', options.height);
+          markerLine.setAttribute('width', textBoxWidthV);
+          markerLine.setAttribute('stroke', 'none');
+          markerLine.setAttribute('stroke-width', '0');
+          markerLine.setAttribute('fill', '#e91e63');
+          markerLine.setAttribute('id', 'month10');
+          svg.appendChild(markerLine);
+        }
+      }
+
+      if(cur_month == 11){
+        markerLine = timeline.cloneNode(true);
+        markerLine.setAttribute('y', 0);
+        markerLine.setAttribute('x', (novPosition));
+        markerLine.setAttribute('height', options.height);
+        markerLine.setAttribute('width', highlitedWidth);
+        markerLine.setAttribute('stroke', 'none');
+        markerLine.setAttribute('stroke-width', '0');
+        markerLine.setAttribute('fill', '#e91e63');
+        markerLine.setAttribute('id', 'month10');
+        svg.appendChild(markerLine);
+
+        document.getElementById('zoomin').onclick = function(){
+          zoomIn();
+          var textBoxPos = document.getElementById("text10");
+          textBoxPos.value = novPosition;
+          novPosition+=35;
+          var textBoxVal = document.getElementById("text10").value;
+
+          var textBoxWidth = document.getElementById("textWidth10");
+          textBoxWidth.value = highlitedWidth;
+          highlitedWidth+=4;
+          var textBoxWidthV = document.getElementById("textWidth10").value;
+
+          markerLine = timeline.cloneNode(true);
+          markerLine.setAttribute('y', 0);
+          markerLine.setAttribute('x', (textBoxVal));
+          markerLine.setAttribute('height', options.height);
+          markerLine.setAttribute('width', textBoxWidthV);
+          markerLine.setAttribute('stroke', 'none');
+          markerLine.setAttribute('stroke-width', '0');
+          markerLine.setAttribute('fill', '#e91e63');
+          markerLine.setAttribute('id', 'month10');
+          svg.appendChild(markerLine);
+        }
+
+        document.getElementById('zoomout').onclick = function(){
+          zoomOut();
+          var textBoxPos = document.getElementById("text10");
+          textBoxPos.value = novPosition;
+          novPosition-=35;
+          var textBoxVal = document.getElementById("text10").value;
+
+          var textBoxWidth = document.getElementById("textWidth10");
+          textBoxWidth.value = highlitedWidth;
+          highlitedWidth-=4;
+          var textBoxWidthV = document.getElementById("textWidth10").value;
+
+          markerLine = timeline.cloneNode(true);
+          markerLine.setAttribute('y', 0);
+          markerLine.setAttribute('x', (textBoxVal));
+          markerLine.setAttribute('height', options.height);
+          markerLine.setAttribute('width', textBoxWidthV);
+          markerLine.setAttribute('stroke', 'none');
+          markerLine.setAttribute('stroke-width', '0');
+          markerLine.setAttribute('fill', '#e91e63');
+          markerLine.setAttribute('id', 'month10');
+          svg.appendChild(markerLine);
+        }
+      }
+
+      if(cur_month == 12){
+        markerLine = timeline.cloneNode(true);
+        markerLine.setAttribute('y', 0);
+        markerLine.setAttribute('x', (decPosition));
+        markerLine.setAttribute('height', options.height);
+        markerLine.setAttribute('width', highlitedWidth);
+        markerLine.setAttribute('stroke', 'none');
+        markerLine.setAttribute('stroke-width', '0');
+        markerLine.setAttribute('fill', '#e91e63');
+        markerLine.setAttribute('id', 'month10');
+        svg.appendChild(markerLine);
+
+        document.getElementById('zoomin').onclick = function(){
+          zoomIn();
+          var textBoxPos = document.getElementById("text10");
+          textBoxPos.value = decPosition;
+          decPosition+=39;
+          var textBoxVal = document.getElementById("text10").value;
+
+          var textBoxWidth = document.getElementById("textWidth10");
+          textBoxWidth.value = highlitedWidth;
+          highlitedWidth+=4;
+          var textBoxWidthV = document.getElementById("textWidth10").value;
+
+          markerLine = timeline.cloneNode(true);
+          markerLine.setAttribute('y', 0);
+          markerLine.setAttribute('x', (textBoxVal));
+          markerLine.setAttribute('height', options.height);
+          markerLine.setAttribute('width', textBoxWidthV);
+          markerLine.setAttribute('stroke', 'none');
+          markerLine.setAttribute('stroke-width', '0');
+          markerLine.setAttribute('fill', '#e91e63');
+          markerLine.setAttribute('id', 'month10');
+          svg.appendChild(markerLine);
+        }
+
+        document.getElementById('zoomout').onclick = function(){
+          zoomOut();
+          var textBoxPos = document.getElementById("text10");
+          textBoxPos.value = decPosition;
+          decPosition-=39;
+          var textBoxVal = document.getElementById("text10").value;
+
+          var textBoxWidth = document.getElementById("textWidth10");
+          textBoxWidth.value = highlitedWidth;
+          highlitedWidth-=4;
+          var textBoxWidthV = document.getElementById("textWidth10").value;
+
+          markerLine = timeline.cloneNode(true);
+          markerLine.setAttribute('y', 0);
+          markerLine.setAttribute('x', (textBoxVal));
+          markerLine.setAttribute('height', options.height);
+          markerLine.setAttribute('width', textBoxWidthV);
+          markerLine.setAttribute('stroke', 'none');
+          markerLine.setAttribute('stroke-width', '0');
+          markerLine.setAttribute('fill', '#e91e63');
+          markerLine.setAttribute('id', 'month10');
+          svg.appendChild(markerLine);
+        }
+      }
+    }
+
+    google.visualization.events.addListener(chart, 'ready', function () {
+      addLiner(new Date());
+    });
+    
+    google.visualization.events.addListener(chart, 'select', function(){
+      var selections = chart.getSelection();
+      if (selections.length > 0) {
+        var projectId = dataTable.getValue(selections[0].row,0);
+        showProject(projectId);
+        getresourcesData(projectId);
+        getMotivationData(projectId);
+        getstatusSummaryData(projectId);
+        getdates(projectId);
+        getFullData(projectId);
+        getSingleData(projectId);
+        // getActionsData(projectId);
+      }
+    });
+
+    window.addEventListener('resize', drawChart, false);
+    drawChart();      
+};    
+    
+  //   chart.draw(data, options);
+
+  //   // var titlesContainer = document.getElementById('gantt_titles_inner');
+  //   // var titlesChart = new google.visualization.Gantt(titlesContainer);                          
+  //   // titlesChart.draw(data, options);
+
+  // }
+
+function selectHandler(){
+  var selections = chart.getSelection();
+    if (selections.length == 0)
+    {
+        alert('Nothing selected');
+    }
+    else
+    {
+        var selection = selections[0];
+        // console.info(selection);
+        alert('You selected ' + (selection.row == null ? 'something' : data.getValue(selection.row, 0)));
+    }
+  };
+  
+  /////////////////////////////////////////////////////////////
+
+
+  ///////////////Zoom-In and Zoom-Out in Gantt Chart/////////////////
+
+  function setZoom(zoom,el) {
+      
+      transformOrigin = [0,0];
+	    el = el || instance.getContainer();
+	    var p = ["webkit", "moz", "ms", "o"],
+            s = "scale(" + zoom + ")",
+            oString = (transformOrigin[0] * 100) + "% " + (transformOrigin[1] * 100) + "%";
+
+	    for (var i = 0; i < p.length; i++) {
+	        el.style[p[i] + "Transform"] = s;
+	        el.style[p[i] + "TransformOrigin"] = oString;
+	    }
+
+	    el.style["transform"] = s;
+	    el.style["transformOrigin"] = oString;
+      
+  }
+
+  function showVal(a){
+    var zoomScale = Number(a)/10;
+    setZoom(zoomScale,document.getElementsByClassName('gantt_class')[0])
+  }
+
+  function zoomIn(){
+    var textBox = document.getElementById("text");
+    textBox.value = a+=50;
+    var newValue = document.getElementById("text").value;
+    var projectType = $('#project_type').val();
+    rowData = buildGanttRows(projectType);
+
+    maxMenuWidth = maxMenuWidth-8;
+
+    projectCount = rowData.length;
+    ganttRowHeight = 42; 
+    ganttHeight = (projectCount + 1) * ganttRowHeight;
+
+    setDimensions(newValue,ganttTitlesWidth,ganttDefaultView);
+
+    google.charts.load('current', {
+        'packages': ['gantt']
+    });  
+
+    google.charts.setOnLoadCallback(drawCharts);
+  }
+
+  function zoomOut(){
+    var textBox = document.getElementById("text");
+    textBox.value = a-=50;
+    var newValue = document.getElementById("text").value;
+    var projectType = $('#project_type').val();
+    rowData = buildGanttRows(projectType);
+
+    maxMenuWidth = maxMenuWidth+8;
+    console.log(maxMenuWidth);
+
+    projectCount = rowData.length;
+    ganttRowHeight = 42; 
+    ganttHeight = (projectCount + 1) * ganttRowHeight;
+
+    setDimensions(newValue,ganttTitlesWidth,ganttDefaultView);
+
+    google.charts.load('current', {
+        'packages': ['gantt']
+    });  
+    
+    google.charts.setOnLoadCallback(drawCharts);
+  }
+
+  ///////////////Reload Page/////////////////
+
+  function reload(){
+    window.open("https://script.google.com/macros/s/AKfycbxqq0qfQeWvf850LW3b8CjfpPA4WZCWkKS4cuIVhxky/dev",'_top');
+  }
+
+  ///////////////Shows Pop Up/////////////////
+
+  let onChange_Names;
+  let onChange_Dec;
+  let onChange_Color;
+
+  function showProject(projectId){
+    // $('#aggregate_view').hide();
+    $('#project_view').show();
+    $('#page_controls').css("opacity","0.25");
+    $('#aggregate_view').css("opacity","0.25");
+    $('#exampleModal').addClass("show");
+    $('#exampleModal').css("display","block");
+    
+    var project = getProjectData(projectId);
+    // console.log(project);
+    document.getElementById("kanban_board").value = project[5];
+    var temp = document.getElementById("kanban_board").value;
+    console.log(temp);
+    $('#pro_header').html(project[5]);
+
+    var task_names;
+    var task_id;
+    var rowCount = plData.boardsName.length;               
+    for (var i = 0; i < rowCount; i++) {
+      try{
+        var resource = plData.boardsName[i];
+        if (temp == resource){
+          var tasks = plData.taskName.length;
+          task_names = plData.taskName[i];
+          onChange_Names = plData.taskName[i];
+          onChange_Dec = plData.taskDec[i];
+          onChange_Color = plData.taskColor[i];
+        }
+      }catch(e){
+        console.log(e);
+      }
+    }
+    console.log('Selected Board tasks:',task_names);
+
+    //// Kanban Edit Dropdown ////
+
+    var resourceContainer = "kanbanCards";
+    var table_body = '<select class="form-control" id="' + resourceContainer + '" onchange="changeValues(event)">';
+    table_body += '<option value="Select Card">Select Card</option>';
+    for (var i = 0; i < task_names.length; i++) {
+      table_body += '<option value="'+ task_names[i] +'">'+ task_names[i] +'</option>';
+    }
+    table_body += '</select>';
+
+    //// Kanban Delete Dropdown ////
+    
+    var resourceContainer = "kanbanCardsDelete";
+    var table_body1 = '<select class="form-control" id="' + resourceContainer + '">';
+    table_body1 += '<option value="Select Card">Select Card</option>';
+    for (var i = 0; i < task_names.length; i++) {
+      table_body1 += '<option value="'+ task_names[i] +'">'+ task_names[i] +'</option>';
+    }
+    table_body1 += '</select>';
+    $('#kanbanCardsDropdown').html(table_body);
+    $('#kanbanDeleteDropdown').html(table_body1);
+
+
+    // var projectStageString = lifecycleStages[project[6]];
+    // var stageBannerImgURL= "https://storage.googleapis.com/cloudiq-noticeboard/public/pl_" + projectStageString + ".png";
+    // $('#stage_banner_img').attr("src", stageBannerImgURL);
+    // $('#title_header').html(project[5]);
+    // $('#project_summary').html(project[8]);
+    // $('#project_motivation').html(project[7]);
+    // console.log("bleh");
+    // buildProjectFlow(project);
+    // buildActionTable(project, "Active");
+    // buildActionTable(project, "Not Started");
+    // buildActionTable(project, "Complete");
+    // buildResourceTable(project);
+
+  }
+
+  function changeValues(e){
+    console.log(onChange_Names);
+    console.log(onChange_Dec);
+    console.log(onChange_Color);
+    var selected_card = document.getElementById("kanbanCards").value;
+    for (var i = 0; i < onChange_Names.length; i++) {
+      if(selected_card == onChange_Names[i]){
+        document.getElementById("kanban_editTitle").value = onChange_Names[i];
+        document.getElementById("kanban_editdec").value = onChange_Dec[i];
+        document.getElementById("kanban_editcolor").value = onChange_Color[i];
+      }
+    }
+  }
+  
+  /////////////// Add Another Child Button /////////////////
+
+  var i = 0;
+  function duplicate() {
+    var dummy = '<div class="form-group"><label for="exampleInputEmail1">Child Task</label><input type="text" class="form-control" id="kanban_CName" name="kanban_CName[]" aria-describedby="emailHelp"></div><div class="form-group"><label for="exampleInputPassword1">Child Column Name</label><select class="form-control" name="kanban_Ccolumn[]" id="kanban_Ccolumn"><option value="Requested">Requested</option><option value="In Progress">In Progress</option><option value="Done">Done</option></select></div><div class="form-group"><label for="exampleInputPassword1">Child Lane Name</label><select class="form-control" name="kanban_Clane[]" id="kanban_Clane"><!-- <option value="Portfolio Lane">Portfolio Lane</option><option value="Test Main Swimlane">Test Main Swimlane</option> --><option value="Default Swimlane">Default Swimlane</option></select></div><div class="form-group"><label for="exampleInputEmail1">Child Assignee</label><input type="text" class="form-control" id="kanban_Cassign" name="kanban_Cassign[]" aria-describedby="emailHelp"></div><div class="form-group"><label for="exampleInputEmail1">Child Card Color</label><input type="color" class="form-control" id="kanban_Ccolor" name="kanban_Ccolor[]" aria-describedby="emailHelp"></div><div class="form-group"><label for="exampleInputEmail1">Child Description</label><input type="text" class="form-control" id="kanban_Cdec" name="kanban_Cdec[]" aria-describedby="emailHelp"></div><div class="form-group"><label for="exampleInputPassword1">Child Priority</label><select class="form-control" name="kanban_Cpriority[]" id="kanban_Cpriority"><option value="Low">Low</option><option value="Average">Average</option><option value="High">High</option></select></div><div class="form-group"><label for="exampleInputEmail1">Child Deadline</label><input type="date" class="form-control" id="kanban_Cdead" name="kanban_Cdead[]" aria-describedby="emailHelp"></div><div class="form-group"><label for="exampleInputEmail1">Child subtasks</label><input type="text" class="form-control" id="kanban_Csubtask" name="kanban_Csubtask[]" aria-describedby="emailHelp"></div><div class="form-group"><label for="exampleInputEmail1">Child Tags</label><input type="text" class="form-control" id="kanban_Ctag" name="kanban_Ctag[]" aria-describedby="emailHelp"></div><div class="form-group"><label for="exampleInputEmail1">Child Size</label><input type="text" class="form-control" id="kanban_Csize" name="kanban_Csize[]" aria-describedby="emailHelp"></div><div class="form-group"><label for="exampleInputEmail1">Child extlink</label><input type="text" class="form-control" id="kanban_Cextlink" name="kanban_Cextlink[]" aria-describedby="emailHelp"></div>'; 
+    $("#child-card").append(dummy);
+  }
+
+  /////////////// Pop Up Back Button /////////////////
+
+  function showGanttChartAgain(){
+    $('#exampleModal').hide();
+    $('#exampleModal2').hide();
+    $('#full-edit').hide();
+    // $('#projectdetail_view').show();
+    $('#aggregate_view').css("opacity","1");
+    $('#page_controls').css("opacity","1");
+  }
+
+  ///////////////Project Summary Button/////////////////
+
+  function showSummary(){
+    $('#project_view').hide();
+    $('#page_controls').hide();
+    $('#aggregate_view').hide();
+    $('#exampleModal').hide();
+    $('#exampleModal2').hide();
+    $('#projectdetail_view').show();
+  }
+
+  function showSummaryBack(){
+    $('#project_view').hide();
+    $('#exampleModal').hide();
+    $('#exampleModal2').hide();
+    $('#projectdetail_view').hide();
+    $('#aggregate_view').show();
+    $('#page_controls').show();
+    $('#aggregate_view').css("opacity","1");
+    $('#page_controls').css("opacity","1");
+  }
+
+  function getSingleData(projectId){
+    var project = getProjectData(projectId);
+    // console.log(project);
+    // $('#pro_header').html(project[5]);
+
+    var projectStageString = lifecycleStages[project[6]];
+    var stageBannerImgURL= "https://storage.googleapis.com/cloudiq-noticeboard/public/pl_" + projectStageString + ".png";
+    $('#stage_banner_img').attr("src", stageBannerImgURL);
+    $('#title_header').html(project[5]);
+    $('#project_summary').html(project[8]);
+    $('#project_motivation').html(project[7]);
+    $('#current_header').html(project[5]);
+    // buildProjectFlow(project);
+    buildActionTable(project, "Active");
+    buildActionTable(project, "Not Started");
+    buildActionTable(project, "Complete");
+    buildResourceTable(project);
+  }
+
+  ///////////////Only Dates and Percentage Update/////////////////
+
+  function getdates(projectId){
+    var project = getProjectData(projectId);
+    document.getElementById("p_Id").value = project[0];
+    document.getElementById("poject_title").value = project[5];
+    document.getElementById("S_date").value = project[1];
+    document.getElementById("E_date").value = project[2];
+    document.getElementById("poject_duration").value = project[3];
+    document.getElementById("poject_depends").value = project[10];
+    document.getElementById("poject_showIt").value = project[11];
+    document.getElementById("poject_complete").value = project[9];
+    document.getElementById("poject_summary").value = project[8];
+    document.getElementById("poject_motivation").value = project[7];
+    // document.getElementById("poject_resouce").value = project[10];
+    document.getElementById("poject_type").value = project[4];
+    document.getElementById("poject_lifecycle").value = project[6];
+    document.getElementById("poject_priority").value = project[12];
+    document.getElementById("poject_program").value = project[13];
+    document.getElementById("poject_status").value = project[14];
+    document.getElementById("poject_notes").value = project[15];
+    document.getElementById("poject_stackholder").value = project[16];
+  }
+
+  function putGanttData(){
+    var project_Id = document.getElementById("p_Id").value;
+    var poject_title = document.getElementById("poject_title").value
+    var start_date = document.getElementById("S_date").value;
+    var end_date = document.getElementById("E_date").value;
+    var poject_duration = document.getElementById("poject_duration").value;
+    var poject_depends = document.getElementById("poject_depends").value;
+    var poject_showIt = document.getElementById("poject_showIt").value;
+    var poject_complete = document.getElementById("poject_complete").value;
+    var poject_summary = document.getElementById("poject_summary").value;
+    var poject_motivation = document.getElementById("poject_motivation").value;
+    // var poject_resouce = document.getElementById("poject_resouce").value;
+    var poject_type = document.getElementById("poject_type").value;
+    var poject_lifecycle = document.getElementById("poject_lifecycle").value;
+    var poject_priority = document.getElementById("poject_priority").value;
+    var poject_program = document.getElementById("poject_program").value;
+    var poject_status = document.getElementById("poject_status").value;
+    var poject_notes = document.getElementById("poject_notes").value;
+    var poject_stackholder = document.getElementById("poject_stackholder").value;
+    google.script.run.putRow(project_Id,poject_title,start_date,end_date,poject_duration,poject_depends,poject_showIt,poject_complete,poject_summary,poject_motivation,poject_type,poject_lifecycle,poject_priority,poject_program,poject_status,poject_notes,poject_stackholder);
+    $('#exampleModal2').addClass("show");
+    $('#exampleModal2').css("display","block");
+    $('#page_controls').css("opacity","0.25");
+    $('#aggregate_view').css("opacity","0.25");
+    $('#exampleModal').hide();
+  }
+
+  ///////////////Full Project Update Page/////////////////
+
+  function fullProjectEdit(){
+    $('#exampleModal').hide();
+    $('#exampleModal2').hide();
+    $('#aggregate_view').hide();
+    $('#page_controls').hide();
+    $('#full-edit').show();
+  }
+
+  function fullProjectEditBack(){
+    $('#exampleModal').hide();
+    $('#exampleModal2').hide();
+    $('#aggregate_view').show();
+    $('#page_controls').show();
+    $('#full-edit').hide();
+    $('#page_controls').css("opacity","1");
+    $('#aggregate_view').css("opacity","1");
+  }
+
+  function getFullData(projectId){
+    var project = getProjectData(projectId);
+    $('#fullEditHeader').html(project[5]);
+    $('#kanbanHeader').html(project[5]);
+    $('#kanbanEditHeader').html(project[5]);
+    $('#kanbanDeleteHeader').html(project[5]);
+    document.getElementById("pfull_Id").value = project[0];
+    document.getElementById("pojectfull_title").value = project[5];
+    document.getElementById("Sfull_date").value = project[1];
+    document.getElementById("Efull_date").value = project[2];
+    document.getElementById("pojectfull_duration").value = project[3];
+    document.getElementById("pojectfull_depends").value = project[10];
+    document.getElementById("pojectfull_showIt").value = project[11];
+    document.getElementById("pojectfull_complete").value = project[9];
+    document.getElementById("pojectfull_summary").value = project[8];
+    document.getElementById("pojectfull_motivation").value = project[7];
+    // document.getElementById("poject_resouce").value = project[10];
+    document.getElementById("pojectfull_type").value = project[4];
+    document.getElementById("pojectfull_lifecycle").value = project[6];
+    document.getElementById("pojectfull_priority").value = project[12];
+    document.getElementById("pojectfull_program").value = project[13];
+    document.getElementById("pojectfull_status").value = project[14];
+    document.getElementById("pojectfull_notes").value = project[15];
+    document.getElementById("pojectfull_stackholder").value = project[16];
+  }
+
+  function putFullGanttData(){
+    var project_Id = document.getElementById("pfull_Id").value;
+    var poject_title = document.getElementById("pojectfull_title").value
+    var start_date = document.getElementById("Sfull_date").value;
+    var end_date = document.getElementById("Efull_date").value;
+    var poject_duration = document.getElementById("pojectfull_duration").value;
+    var poject_depends = document.getElementById("pojectfull_depends").value;
+    var poject_showIt = document.getElementById("pojectfull_showIt").value;
+    var poject_complete = document.getElementById("pojectfull_complete").value;
+    var poject_summary = document.getElementById("pojectfull_summary").value;
+    var poject_motivation = document.getElementById("pojectfull_motivation").value;
+    // var poject_resouce = document.getElementById("pojectfull_resouce").value;
+    var poject_type = document.getElementById("pojectfull_type").value;
+    var poject_lifecycle = document.getElementById("pojectfull_lifecycle").value;
+    var poject_priority = document.getElementById("pojectfull_priority").value;
+    var poject_program = document.getElementById("pojectfull_program").value;
+    var poject_status = document.getElementById("pojectfull_status").value;
+    var poject_notes = document.getElementById("pojectfull_notes").value;
+    var poject_stackholder = document.getElementById("pojectfull_stackholder").value;
+    google.script.run.putRow(project_Id,poject_title,start_date,end_date,poject_duration,poject_depends,poject_showIt,poject_complete,poject_summary,poject_motivation,poject_type,poject_lifecycle,poject_priority,poject_program,poject_status,poject_notes,poject_stackholder);
+    $('#exampleModal3').addClass("show");
+    $('#exampleModal3').css("display","block");
+    $('#full-edit').css("opacity","0.25");
+  }
+
+  ///////////////Full Project Edit Back Button/////////////////
+
+  function showFullEditAgain(){
+    $('#exampleModal3').hide();
+    $('#full-edit').css("opacity","1");
+  }
+
+  ///////////////Motivation Edit/////////////////
+
+  function motivationEdit(){
+    $('#motivationModal').addClass("show");
+    $('#motivationModal').css("display","block");
+    $('#projectdetail_view').css("opacity","0.25");
+  }
+
+  function getMotivationData(projectId){
+    var project = getProjectData(projectId);
+    $('#motivation_header').html(project[5]);
+    document.getElementById("onlymotivationPId").value = project[0];
+    document.getElementById("onlyMotivation").value = project[7];
+  }
+
+  function putMotivationData(){
+    var pID = document.getElementById("onlymotivationPId").value;
+    var pMotivation = document.getElementById("onlyMotivation").value;
+    google.script.run.putMotivation(pID,pMotivation);
+    $('#exampleModal4').addClass("show");
+    $('#exampleModal4').css("display","block");
+    $('#projectdetail_view').css("opacity","0.25");
+    $('#motivationModal').hide();
+    document.getElementById("project_motivation").innerHTML = pMotivation;
+  }
+
+  ///////////////Status Summary Edit/////////////////
+
+  function statusSummaryEdit(){
+    $('#statusSummaryModal').addClass("show");
+    $('#statusSummaryModal').css("display","block");
+    $('#projectdetail_view').css("opacity","0.25");
+  }
+
+  function getstatusSummaryData(projectId){
+    var project = getProjectData(projectId);
+    $('#summary_header').html(project[5]);
+    document.getElementById("onlysummaryPId").value = project[0];
+    document.getElementById("onlySummary").value = project[8];
+  }
+
+  function putstatusSummaryData(){
+    var pID = document.getElementById("onlysummaryPId").value;
+    var pSummary = document.getElementById("onlySummary").value;
+    google.script.run.putStatusSummary(pID,pSummary);
+    $('#exampleModal4').addClass("show");
+    $('#exampleModal4').css("display","block");
+    $('#projectdetail_view').css("opacity","0.25");
+    $('#statusSummaryModal').hide();
+    document.getElementById("project_summary").innerHTML = pSummary;
+  }
+
+  ///////////////Resource Edit/////////////////
+
+  function resourceEdit(){
+    $('#resourcesModal').addClass("show");
+    $('#resourcesModal').css("display","block");
+    $('#projectdetail_view').css("opacity","0.25");
+  }
+
+  function getresourcesData(projectId){
+    var project = getProjectData(projectId);
+    $('#resources_header').html(project[5]);
+
+    if(project[4] == 'V3 Models Onboarding'){
+
+      $('#dropLifecycle').html('<label for="exampleInputPassword1">Owner</label><select class="form-control" name="onlyresourcesLifecycle" id="onlyresourcesLifecycle"><option value="Feasibility">Feasibility</option><option value="Outline Scoping">Outline Scoping</option><option value="Merchant Confirmation">Merchant Confirmation</option><option value="Delivery Planning">Delivery Planning</option><option value="Under Development">Under Development</option><option value="Under Test">Under Test</option><option value="AM Approval For Live">AM Approval For Live</option><option value="Live On Site">Live On Site</option></select>');
+
+    } else if (project[4] == 'Development'){
+
+      $('#dropLifecycle').html('<label for="exampleInputPassword1">Owner</label><select class="form-control" name="onlyresourcesLifecycle" id="onlyresourcesLifecycle"><option value="Feasibility">Feasibility</option><option value="Outline Scoping">Outline Scoping</option><option value="Initial Estimation">Initial Estimation</option><option value="Initial Planning">Initial Planning</option><option value="Requirements Capture">Requirements Capture</option><option value="Technical Specification">Technical Specification</option><option value="Task Estimation">Task Estimation</option><option value="Under Development">Under Development</option><option value="Beta Release">Beta Release</option><option value="Release Sign Off">Release Sign Off</option><option value="Production Release">Production Release</option></select>');
+
+    } else if (project[4] == 'Onboard New Merchant'){
+      
+      $('#dropLifecycle').html('<label for="exampleInputPassword1">Owner</label><select class="form-control" name="onlyresourcesLifecycle" id="onlyresourcesLifecycle"><option value="Feasibility">Feasibility</option><option value="Scoping / Tag Creation">Scoping / Tag Creation</option><option value="Merchant Tag Set Up ">Merchant Tag Set Up </option><option value="Campiagn Set Up - Under Dev">Campiagn Set Up - Under Dev</option><option value="Live">Live</option></select>');
+
+    } else if (project[4] == 'Marketing'){
+     
+      $('#dropLifecycle').html('<label for="exampleInputPassword1">Owner</label><select class="form-control" name="onlyresourcesLifecycle" id="onlyresourcesLifecycle"><option value="Feasibility">Feasibility</option><option value="Outline Scoping">Outline Scoping</option><option value="Initial Estimation">Initial Estimation</option><option value="Initial Planning">Initial Planning</option><option value="Requirements Capture">Requirements Capture</option><option value="Technical Specification">Technical Specification</option><option value="Task Estimation">Task Estimation</option><option value="Under Development">Under Development</option><option value="Beta Release">Beta Release</option><option value="Release Sign Off">Release Sign Off</option><option value="Production Release">Production Release</option><option value="Conception">Conception</option></select>');
+
+    }  else if (project[4] == 'Sales'){
+      
+      $('#dropLifecycle').html('<label for="exampleInputPassword1">Owner</label><select class="form-control" name="onlyresourcesLifecycle" id="onlyresourcesLifecycle"><option value="Feasibility">Feasibility</option><option value="Outline Scoping">Outline Scoping</option><option value="Initial Estimation">Initial Estimation</option><option value="Initial Planning">Initial Planning</option><option value="Requirements Capture">Requirements Capture</option><option value="Technical Specification">Technical Specification</option><option value="Task Estimation">Task Estimation</option><option value="Under Development">Under Development</option><option value="Beta Release">Beta Release</option><option value="Release Sign Off">Release Sign Off</option><option value="Production Release">Production Release</option></select>');
+
+    } else if (project[4] == 'Engineering Infrastructure'){
+     
+      $('#dropLifecycle').html('<label for="exampleInputPassword1">Owner</label><select class="form-control" name="onlyresourcesLifecycle" id="onlyresourcesLifecycle"><option value="Feasibility">Feasibility</option><option value="Scoping">Scoping</option><option value="Estimation">Estimation</option><option value="Planning">Planning</option><option value="Implementaion">Implementaion</option><option value="Rollout">Rollout</option><option value="Requirements">Requirements</option></select>');
+
+    } else if (project[4] == 'Engineering Admin'){
+      
+      $('#dropLifecycle').html('<label for="exampleInputPassword1">Owner</label><select class="form-control" name="onlyresourcesLifecycle" id="onlyresourcesLifecycle"><option value="Requirements">Requirements</option><option value="Research">Research</option><option value="Delivery Planing">Delivery Planing</option><option value="Delivery">Delivery</option><option value="Report">Report</option></select>');
+
+    }
+
+    document.getElementById("onlyresourcesPId").value = project[0];
+    document.getElementById("onlyresourcesType").value = project[4];
+    document.getElementById("onlyresourcesLifecycle").value = project[6];
+  }
+
+  function putresourcesData(){
+    var pID = document.getElementById("onlyresourcesPId").value;
+    var pType = document.getElementById("onlyresourcesType").value;
+    var pLifecycle = document.getElementById("onlyresourcesLifecycle").value;
+    google.script.run.putResources(pID,pType,pLifecycle);
+    $('#exampleModal4').addClass("show");
+    $('#exampleModal4').css("display","block");
+    $('#projectdetail_view').css("opacity","0.25");
+    $('#resourcesModal').hide();
+    var myTable = document.getElementById('resources_table');
+    myTable.rows[1].cells[0].innerHTML = pType;
+    myTable.rows[1].cells[1].innerHTML = pLifecycle;
+  }
+
+  ///////////////Actions Edit/////////////////
+
+  function ActionsEdit(reqObj){
+    reqObj = JSON.parse(decodeURIComponent(reqObj));
+    document.getElementById("rowId").value = reqObj.rowID;
+    document.getElementById("AStatus").value = reqObj.a_status;
+    document.getElementById("currentId").value = reqObj.actionID;
+    document.getElementById("currentAction").value = reqObj.action;
+    document.getElementById("currentOwner").value = reqObj.owner;
+
+    $('#ActionsModal').addClass("show");
+    $('#ActionsModal').css("display","block");
+    $('#projectdetail_view').css("opacity","0.25");
+  }
+
+  function putActionsData(){
+    var rowId = document.getElementById("rowId").value;
+    var a_status = document.getElementById("AStatus").value;
+    var currentId = document.getElementById("currentId").value;
+    var currentAction = document.getElementById("currentAction").value;
+    var currentOwner = document.getElementById("currentOwner").value;
+
+    google.script.run.putActions(currentId,currentAction,currentOwner);
+    $('#exampleModal4').addClass("show");
+    $('#exampleModal4').css("display","block");
+    $('#projectdetail_view').css("opacity","0.25");
+    $('#ActionsModal').hide();
+
+    if(a_status == 'Not Started'){
+      $('#next_actions_table #'+rowId).children('td:first').text(currentAction);
+      $('#next_actions_table #'+rowId).children('td:eq(1)').text(currentOwner);
+    }
+
+    if(a_status == 'Active'){
+      $('#current_actions_table #'+rowId).children('td:first').text(currentAction);
+      $('#current_actions_table #'+rowId).children('td:eq(1)').text(currentOwner);
+    }
+
+    if(a_status == 'Complete'){
+      $('#completed_actions_table #'+rowId).children('td:first').text(currentAction);
+      $('#completed_actions_table #'+rowId).children('td:eq(1)').text(currentOwner);
+    }
+  }
+
+  ///////////////Actions Add/////////////////
+
+  // function getActionsData(projectId){
+  //   var project = getProjectData(projectId);
+  //   $('#actionsHeader').html(project[5]);
+
+  //   document.getElementById('current_Act').onclick = function(){
+  //     document.getElementById("actionProId").value = project[0];
+  //     $('#ActionsAddModal').show();
+  //     $('#projectdetail_view').hide();
+  //     $('#actionHeader_name').html('Add Current Actions');
+  //     $('#ActionsAddModal').css("opacity","1");
+  //     document.getElementById("actionStatus").value = 'Active';
+  //   }
+  //   document.getElementById('next_Act').onclick = function(){
+  //     document.getElementById("actionProId").value = project[0];
+  //     $('#ActionsAddModal').show();
+  //     $('#projectdetail_view').hide();
+  //     $('#actionHeader_name').html('Add Next Actions');
+  //     $('#ActionsAddModal').css("opacity","1");
+  //     document.getElementById("actionStatus").value = 'Not Started';
+  //   }
+  //   document.getElementById('completed_Act').onclick = function(){
+  //     document.getElementById("actionProId").value = project[0];
+  //     $('#ActionsAddModal').show();
+  //     $('#projectdetail_view').hide();
+  //     $('#actionHeader_name').html('Add Completed Actions');
+  //     $('#ActionsAddModal').css("opacity","1");
+  //     document.getElementById("actionStatus").value = 'Complete';
+  //   }
+  // }
+
+  // function addActionsData(){
+  //   var proId = document.getElementById("actionProId").value;
+  //   var sA_date = document.getElementById("SA_date").value;
+  //   var eA_date = document.getElementById("EA_date").value;
+  //   var actionDuration = document.getElementById("actionDuration").value;
+  //   var actionName = document.getElementById("actionName").value;
+  //   var actionType = document.getElementById("actionType").value;
+  //   var actionLink = document.getElementById("actionLink").value;
+  //   var actionOwner = document.getElementById("actionOwner").value;
+  //   var actionDepends = document.getElementById("actionDepends").value;
+  //   var actionNotes = document.getElementById("actionNotes").value;
+  //   var actionStatus = document.getElementById("actionStatus").value;
+
+  //   if (actionName == ''){
+  //     $('#DataAddedMsg').html('Please Add Action Name');
+  //     $('#addActionRequired').addClass("show");
+  //     $('#addActionRequired').css("display","block");
+  //     $('#ActionsAddModal').css("opacity","0.25");
+  //   }else if (actionOwner == ''){
+  //     $('#DataAddedMsg').html('Please Add Owner Name');
+  //     $('#addActionRequired').addClass("show");
+  //     $('#addActionRequired').css("display","block");
+  //     $('#ActionsAddModal').css("opacity","0.25");
+  //   }else{
+  //     document.getElementById("actionProId").value = " ";
+  //     document.getElementById("SA_date").value = " ";
+  //     document.getElementById("EA_date").value = " ";
+  //     document.getElementById("actionDuration").value = " ";
+  //     document.getElementById("actionName").value = " ";
+  //     document.getElementById("actionType").value = " ";
+  //     document.getElementById("actionLink").value = " ";
+  //     document.getElementById("actionOwner").value = " ";
+  //     document.getElementById("actionDepends").value = " ";
+  //     document.getElementById("actionNotes").value = " ";
+
+  //     var aID = Math.floor((Math.random() * 5000) + 2);
+
+  //     google.script.run.addActions(proId,aID,sA_date,eA_date,actionDuration,actionName,actionType,actionLink,actionOwner,actionDepends,actionNotes,actionStatus);
+  //     $('#exampleModal5').addClass("show");
+  //     $('#exampleModal5').css("display","block");
+  //     $('#ActionsAddModal').css("opacity","0.25");
+
+  //     var obj = {rowID:'row_'+aID, a_status:actionStatus , actionID: aID, action:actionName , owner:actionOwner !==undefined ? actionOwner : ''};
+  //     // `<input type="button" value="Edit" onclick="ActionsEdit('${encodeURIComponent(JSON.stringify(obj))}')">`
+
+  //     if (actionStatus == 'Active'){
+  //       var table = document.getElementById('current_actions_table');
+  //       for (var r = 1; r < 2; r += 1) {
+  //         var x = document.getElementById('current_actions_table').insertRow(r);
+  //         for (var c = 0; c < 3; c += 1) {
+  //           var y = x.insertCell(c);
+  //         }
+  //         x.id = "row_"+aID;
+  //         table.rows[r].cells[0].innerHTML = actionName;
+  //         table.rows[r].cells[1].innerHTML = actionOwner;
+  //         table.rows[r].cells[2].innerHTML = `<input type="button" class="btn btn-primary" value="Edit" onclick="ActionsEdit('${encodeURIComponent(JSON.stringify(obj))}')">`;
+  //       }
+  //     }
+
+  //     if (actionStatus == 'Not Started'){
+  //       var table = document.getElementById('next_actions_table');
+  //       for (var r = 1; r < 2; r += 1) {
+  //         var x = document.getElementById('next_actions_table').insertRow(r);
+  //         for (var c = 0; c < 3; c += 1) {
+  //           var y = x.insertCell(c);
+  //         }
+  //         x.id = "row_"+aID;
+  //         table.rows[r].cells[0].innerHTML = actionName;
+  //         table.rows[r].cells[1].innerHTML = actionOwner;
+  //         table.rows[r].cells[2].innerHTML = `<input type="button" class="btn btn-primary" value="Edit" onclick="ActionsEdit('${encodeURIComponent(JSON.stringify(obj))}')">`;
+  //       }
+  //     }
+
+  //     if (actionStatus == 'Complete'){
+  //       var table = document.getElementById('completed_actions_table');
+  //       for (var r = 1; r < 2; r += 1) {
+  //         var x = document.getElementById('completed_actions_table').insertRow(r);
+  //         for (var c = 0; c < 3; c += 1) {
+  //           var y = x.insertCell(c);
+  //         }
+  //         x.id = "row_"+aID;
+  //         table.rows[r].cells[0].innerHTML = actionName;
+  //         table.rows[r].cells[1].innerHTML = actionOwner;
+  //         table.rows[r].cells[2].innerHTML = `<input type="button" class="btn btn-primary" value="Edit" onclick="ActionsEdit('${encodeURIComponent(JSON.stringify(obj))}')">`;
+  //       }
+  //     }
+
+  //   }
+
+  // }
+
+  // function validationBack(){
+  //   $('#exampleModal5').hide();
+  //   $('#addActionRequired').hide();
+  //   $('#ActionsAddModal').css("opacity","1");
+  // }
+
+  ///////////////Summary Pop Up Back Button/////////////////
+
+  function showSummaryAgain(){
+    $('#motivationModal').hide();
+    $('#statusSummaryModal').hide();
+    $('#resourcesModal').hide();
+    $('#ActionsModal').hide();
+    $('#ActionsAddModal').hide();
+    $('#exampleModal4').hide();
+    $('#exampleModal5').hide();
+    $('#projectdetail_view').show();
+    $('#projectdetail_view').css("opacity","1");
+  }
+
+  /////////////// Kanban Modal Button /////////////////
+
+  function kanbanBtn(){
+    $('#motivationModal').hide();
+    $('#statusSummaryModal').hide();
+    $('#resourcesModal').hide();
+    $('#ActionsModal').hide();
+    $('#ActionsAddModal').hide();
+    $('#exampleModal4').hide();
+    $('#exampleModal5').hide();
+    $('#exampleModal').hide();
+    $('#exampleModal2').hide();
+    $('#aggregate_view').hide();
+    $('#page_controls').hide();
+    $('#kanban-new').show();
+  }
+
+  function kanbanBackBtn(){
+    $('#exampleModal').hide();
+    $('#exampleModal2').hide();
+    $('#aggregate_view').show();
+    $('#page_controls').show();
+    $('#full-edit').hide();
+    $('#kanban-new').hide();
+    $('#page_controls').css("opacity","1");
+    $('#aggregate_view').css("opacity","1");
+  }
+
+  function kanbanSave(){
+    var kanban_board = document.getElementById("kanban_board").value;
+    var kanban_PName = document.getElementById("kanban_PName").value;
+    var kanban_Pcolumn = document.getElementById("kanban_Pcolumn").value;
+    var kanban_Plane = document.getElementById("kanban_Plane").value;
+    var kanban_Passign = document.getElementById("kanban_Passign").value;
+    var kanban_Pcolor = document.getElementById("kanban_Pcolor").value;
+    var kanban_Pdec = document.getElementById("kanban_Pdec").value;
+    var kanban_Ppriority = document.getElementById("kanban_Ppriority").value;
+    var kanban_Pdead = document.getElementById("kanban_Pdead").value;
+    var kanban_Psubtask = document.getElementById("kanban_Psubtask").value;
+    var kanban_Ptag = document.getElementById("kanban_Ptag").value;
+    var kanban_Psize = document.getElementById("kanban_Psize").value;
+    var kanban_Pextlink = document.getElementById("kanban_Pextlink").value;
+
+    var kanban_CName = document.getElementById("kanban_CName").value;
+    // var kanban_CName = [];
+    // $("input[name='kanban_CName[]']").each(function() {
+    //     kanban_CName.push($(this).val());
+    // });
+    // console.log(kanban_CName);
+    var kanban_Ccolumn = document.getElementById("kanban_Ccolumn").value;
+    // var kanban_Ccolumn = [];
+    // $("select[name='kanban_Ccolumn[]']").each(function() {
+    //     kanban_Ccolumn.push($(this).val());
+    // });
+    // console.log(kanban_Ccolumn);
+    var kanban_Clane = document.getElementById("kanban_Clane").value;
+    // var kanban_Clane = [];
+    // $("select[name='kanban_Clane[]']").each(function() {
+    //     kanban_Clane.push($(this).val());
+    // });
+    // console.log(kanban_Clane);
+    var kanban_Cassign = document.getElementById("kanban_Cassign").value;
+    // var kanban_Cassign = [];
+    // $("input[name='kanban_Cassign[]']").each(function() {
+    //     kanban_Cassign.push($(this).val());
+    // });
+    // console.log(kanban_Cassign);
+    var kanban_Ccolor = document.getElementById("kanban_Ccolor").value;
+    // var kanban_Ccolor = [];
+    // $("input[name='kanban_Ccolor[]']").each(function() {
+    //     kanban_Ccolor.push($(this).val());
+    // });
+    // console.log(kanban_Ccolor);
+    var kanban_Cdec = document.getElementById("kanban_Cdec").value;
+    // var kanban_Cdec = [];
+    // $("input[name='kanban_Cdec[]']").each(function() {
+    //     kanban_Cdec.push($(this).val());
+    // });
+    // console.log(kanban_Cdec);
+    var kanban_Cpriority = document.getElementById("kanban_Cpriority").value;
+    // var kanban_Cpriority = [];
+    // $("select[name='kanban_Cpriority[]']").each(function() {
+    //     kanban_Cpriority.push($(this).val());
+    // });
+    // console.log(kanban_Cpriority);
+    var kanban_Cdead = document.getElementById("kanban_Cdead").value;
+    // var kanban_Cdead = [];
+    // $("input[name='kanban_Cdead[]']").each(function() {
+    //     kanban_Cdead.push($(this).val());
+    // });
+    // console.log(kanban_Cdead);
+    var kanban_Csubtask = document.getElementById("kanban_Csubtask").value;
+    // var kanban_Csubtask = [];
+    // $("input[name='kanban_Csubtask[]']").each(function() {
+    //     kanban_Csubtask.push($(this).val());
+    // });
+    // console.log(kanban_Csubtask);
+    var kanban_Ctag = document.getElementById("kanban_Ctag").value;
+    // var kanban_Ctag = [];
+    // $("input[name='kanban_Ctag[]']").each(function() {
+    //     kanban_Ctag.push($(this).val());
+    // });
+    // console.log(kanban_Ctag);
+    var kanban_Csize = document.getElementById("kanban_Csize").value;
+    // var kanban_Csize = [];
+    // $("input[name='kanban_Csize[]']").each(function() {
+    //     kanban_Csize.push($(this).val());
+    // });
+    // console.log(kanban_Csize);
+    var kanban_Cextlink = document.getElementById("kanban_Cextlink").value;
+    // var kanban_Cextlink = [];
+    // $("input[name='kanban_Cextlink[]']").each(function() {
+    //     kanban_Cextlink.push($(this).val());
+    // });
+    // console.log(kanban_Cextlink);
+
+    document.getElementById("kanban_PName").value = "";
+    document.getElementById("kanban_CName").value = ""
+    document.getElementById("kanban_Pcolumn").value = "";
+    document.getElementById("kanban_Plane").value = "";
+    document.getElementById("kanban_Ccolumn").value = "";
+    document.getElementById("kanban_Clane").value = "";
+    document.getElementById("kanban_Passign").value = "";
+    document.getElementById("kanban_Cassign").value = "";
+    document.getElementById("kanban_Pcolor").value = "";
+    document.getElementById("kanban_Ccolor").value = "";
+    document.getElementById("kanban_Pdec").value = "";
+    document.getElementById("kanban_Cdec").value = "";
+    document.getElementById("kanban_Ppriority").value = "";
+    document.getElementById("kanban_Cpriority").value = "";
+    document.getElementById("kanban_Pdead").value = "";
+    document.getElementById("kanban_Cdead").value = "";
+    document.getElementById("kanban_Psubtask").value = "";
+    document.getElementById("kanban_Csubtask").value = "";
+    document.getElementById("kanban_Ptag").value = "";
+    document.getElementById("kanban_Ctag").value = "";
+    document.getElementById("kanban_Psize").value = "";
+    document.getElementById("kanban_Csize").value = "";
+    document.getElementById("kanban_Pextlink").value = "";
+    document.getElementById("kanban_Cextlink").value = "";
+    google.script.run.kanbanFirst(kanban_board,kanban_PName,kanban_CName,kanban_Pcolumn,kanban_Plane,kanban_Ccolumn,kanban_Clane,kanban_Passign,kanban_Cassign,kanban_Pcolor,kanban_Ccolor,kanban_Pdec,kanban_Cdec,kanban_Ppriority,kanban_Cpriority,kanban_Pdead,kanban_Cdead,kanban_Psubtask,kanban_Csubtask,kanban_Ptag,kanban_Ctag,kanban_Psize,kanban_Csize,kanban_Pextlink,kanban_Cextlink);
+  }
+
+  /////////////// Kanban Edit /////////////////
+
+  function kanbanEditBtn(){
+    $('#motivationModal').hide();
+    $('#statusSummaryModal').hide();
+    $('#resourcesModal').hide();
+    $('#ActionsModal').hide();
+    $('#ActionsAddModal').hide();
+    $('#exampleModal4').hide();
+    $('#exampleModal5').hide();
+    $('#exampleModal').hide();
+    $('#exampleModal2').hide();
+    $('#aggregate_view').hide();
+    $('#page_controls').hide();
+    $('#kanban-new').hide();
+    $('#kanban-edit').show();
+  }
+
+  function kanbanEditBack(){
+    $('#exampleModal').hide();
+    $('#exampleModal2').hide();
+    $('#aggregate_view').hide();
+    $('#page_controls').hide();
+    $('#full-edit').hide();
+    $('#kanban-new').show();
+    $('#kanban-edit').hide();
+    $('#page_controls').css("opacity","1");
+    $('#aggregate_view').css("opacity","1");
+  }
+
+  function kanbanEditSave(){
+    var kanban_board = document.getElementById("kanban_board").value;
+    var kanbanCards = document.getElementById("kanbanCards").value;
+    var kanban_editTitle = document.getElementById("kanban_editTitle").value;
+    var kanban_editdec = document.getElementById("kanban_editdec").value;
+    var kanban_editcolor = document.getElementById("kanban_editcolor").value;
+
+    document.getElementById("kanbanCards").value = "";
+    document.getElementById("kanban_editTitle").value = ""
+    document.getElementById("kanban_editdec").value = "";
+    document.getElementById("kanban_editcolor").value = "";
+    google.script.run.kanbanEdit(kanban_board,kanbanCards,kanban_editTitle,kanban_editdec,kanban_editcolor);
+  }
+
+  /////////////// Kanban Delete /////////////////
+
+  function kanbanDeleteBtn(){
+    $('#motivationModal').hide();
+    $('#statusSummaryModal').hide();
+    $('#resourcesModal').hide();
+    $('#ActionsModal').hide();
+    $('#ActionsAddModal').hide();
+    $('#exampleModal4').hide();
+    $('#exampleModal5').hide();
+    $('#exampleModal').hide();
+    $('#exampleModal2').hide();
+    $('#aggregate_view').hide();
+    $('#page_controls').hide();
+    $('#kanban-new').hide();
+    $('#kanban-delete').show();
+  }
+
+  function kanbanDeleteBack(){
+    $('#exampleModal').hide();
+    $('#exampleModal2').hide();
+    $('#aggregate_view').hide();
+    $('#page_controls').hide();
+    $('#full-edit').hide();
+    $('#kanban-new').show();
+    $('#kanban-delete').hide();
+    $('#page_controls').css("opacity","1");
+    $('#aggregate_view').css("opacity","1");
+  }
+
+  function kanbanDeleteSave(){
+    var kanban_board = document.getElementById("kanban_board").value;
+    var kanbanCards = document.getElementById("kanbanCardsDelete").value;
+    console.log(kanbanCards);
+
+    document.getElementById("kanbanCardsDelete").value = "";
+    google.script.run.kanbanDelete(kanban_board,kanbanCards);
+  }
+
+  /////////////////////////////////////////////////////////////
+
+  function buildProjectFlow(project){  
+    var projectType = project[4]; 
+
+    var projectStage = project[6];
+    // console.log("projectStage:" + projectStage);
+    var projectStages = getProjectWorkflow(projectType)[projectType];
+    var projectStageLanes = Object.keys(projectStages["lanes"]);
+    var laneCount = projectStageLanes.length;
+
+
+    //console.log("projectStages:",  Object.keys(projectStages["lanes"]));
+    //var laneCount = projectStages["lanes"].length;
+    //console.log("projectStages:", projectStages["lanes"]);
+    //console.log("laneCount:" + laneCount);
+
+    var flowGrid = "<table class=\"pgrid\">";  
+    
+    var stageArray = Array(maxStages);
+
+
+
+    var laneLabels = [];
+    for (var i=0; i<laneCount; i++){
+      var lane = projectStages["lanes"][projectStageLanes[i]];
+
+      laneLabels.push(projectStageLanes[i]);
+
+      // console.log(lane);
+      //  //var laneStages = 
+
+      flowGrid += "<tr>";
+      var laneStageCount = lane.length;
+      var laneLabelWidth = 150;
+
+
+      var laneContainerWidth = laneStageCount * 140 + laneLabelWidth;
+
+      for(var j=0; j < laneStageCount; j++){
+        var stage = lane[j];
+        // console.log("\t stage: " + stage);
+        var stageClass = "";
+        var stageId = "flow_obj_" + j;
+
+        stageArray[j] = stageId;
+        if(stage !== ""){
+          if(stage == projectStage){
+            stageClass = "wflow_obj wflow_obj_sel";
+          }else{
+            stageClass = "wflow_obj";
+          }
+          
+        }else{
+          stageClass = "wflow_emp";
+        }
+        flowGrid += "<td><div class=\"wflow " + stageClass + " stage" + j + "\" id=\"" + stageId + "\">" + stage + "</div></td>";
+      }     
+      
+      flowGrid += "</tr>";
+    
+      
+
+    }     //console.log(projectStages["lanes"]);
+
+    
+    flowGrid += "		</table>";
+    flowGrid += "<div id=\"lane_container\">";
+    flowGrid += "<div class=\"lane\" id=\"lane1\"><div class=\"lane_label\" id=\"lane_label1\"></div></div>";
+    flowGrid += "<div class=\"lane\" id=\"lane2\"><div class=\"lane_label\" id=\"lane_label2\"></div></div>";
+    flowGrid += "</div>";
+
+    $('#workflow').html(flowGrid);
+
+    $('#lane_label1').html(laneLabels[0]);
+    $('#lane_label2').html(laneLabels[1]);   
+
+    $('.lane').width(laneContainerWidth);
+    // console.log(flowGrid);
+
+    //linkProjectFlow(stageArray);
+  }
+
+  function linkProjectFlow(stageArray){
+    	 
+	 uuid = getUuid();
+	 
+	// define common elements
+	var line = '<svg class="simple-flow simple-flow-defs">' +
+		'<defs>' +
+		  '<marker id="arrowhead-' + uuid + '" viewBox="0 0 10 10" refX="8" refY="5"' +
+			  'markerUnits="strokeWidth" markerWidth="8" markerHeight="6" orient="auto">' +
+			'<path d="M 0 0 L 10 5 L 0 10 z" stroke="none" fill="' + lineColour + '"/>' +
+		  '</marker>' +
+		'</defs>' +
+		'</svg>';
+	$('#pgrid_container').append(line);
+	 try{
+    //  console.log(stageArray);
+
+     for (var i=0; i<stageArray.length-1; i++){
+      
+      drawLine($('#' + stageArray[i]),$('#' + stageArray[i+1]),uuid);   
+
+     }
+
+		
+	 }catch(e){
+		 console.log(e);
+	 }
+  }
+
+  function getProjectWorkflow(projectType){
+    //console.log("getProjectWorkflow");       
+    var workflowData = plData.workflowData;
+    //console.log(workflowData);     
+    var maxStages = 10;
+
+    var rowCount = workflowData.length;
+
+    var projectTypeFlows = {};
+
+    for (var i = 0; i < rowCount; i++) {
+      try{
+        var projectTypeLabelField = workflowData[i][0];
+        var extraDataField = workflowData[i][2];
+        //console.log("projectTypeLabelField:" + projectTypeLabelField);
+
+        if(projectTypeLabelField == "Project Type"){
+          //console.log("Found project type");
+          var stageOwners = [];
+          var projectType = workflowData[i+1][0];
+          //console.log("projectType:" + projectType);
+          var stageOwnerRow = 1;
+          var stageOwner = workflowData[i+stageOwnerRow][2];
+          
+          var nextRow = 0;
+          while(stageOwner != "" && typeof(stageOwner) !== 'undefined'){
+          
+            //console.log("typeof stageOwner ");
+            //console.log(typeof(stageOwner) );
+            //console.log("stageOwner:" + stageOwner);
+            stageOwners.push(stageOwner);
+            stageOwnerRow++;
+            nextRow = i+stageOwnerRow;
+            //console.log("nextRow:" + nextRow);
+            stageOwner = workflowData[nextRow][2];
+          }
+
+          var ownerStages = [];
+          var ownerCount = stageOwners.length;
+          //console.log("found this many stage owners: :" + ownerCount);
+
+          for (var j = 0; j < ownerCount; j++) {
+            var stages = [];          
+            var stageCount = 1;
+            var stageRow = i + j + 1;
+            //console.log("stageRow:" + stageRow);
+
+            while(stageCount < maxStages){
+              //console.log("stageCount:" + stageCount);
+              var stageColumn = 3+stageCount;
+              //console.log("\t stageColumn:" + stageColumn);
+              var stage = workflowData[stageRow][stageColumn];
+              //console.log("\t stage:" + stage);
+              if(typeof(stage) !== "undefined"){
+                stages.push(stage);
+              }
+              
+              stageCount++;
+
+            }
+            ownerStages[stageOwners[j]] = stages;
+          }
+          projectTypeFlows[projectType] = {};
+          projectTypeFlows[projectType]["lanes"] = ownerStages; 
+
+          var fieldRow = i+4;
+
+          var fieldColumn = 4;
+          var emailNotifFields = [];
+          var slackNotifFields = [];
+          var docTemplateFields = [];
+          var actionTemplateFields = [];
+
+          while(fieldColumn < maxStages){
+            //console.log("stageCount:" + stageCount);
+            
+            //console.log("\t stageColumn:" + stageColumn);          
+            
+            var emailNotifValue = workflowData[fieldRow][fieldColumn];
+            var slackNotifValue = workflowData[fieldRow+1][fieldColumn];
+            var docTemplateValue = workflowData[fieldRow+2][fieldColumn];
+            var actionTemplateValue= workflowData[fieldRow+3][fieldColumn];
+            //console.log("\t emailNotifValue:" + emailNotifValue);
+            //console.log("\t slackNotifValue:" + slackNotifValue);
+            //console.log("\t docTemplateValue:" + docTemplateValue);
+            //console.log("\t actionTemplateValue:" + actionTemplateValue);
+
+            if(typeof(emailNotifValue) !== "undefined"){
+              emailNotifFields.push(emailNotifValue);
+            }
+            if(typeof(slackNotifValue) !== "undefined"){
+              slackNotifFields.push(slackNotifValue);
+            }
+            if(typeof(docTemplateValue) !== "undefined"){
+              docTemplateFields.push(docTemplateValue);
+            }
+            if(typeof(actionTemplateValue) !== "undefined"){
+              actionTemplateFields.push(actionTemplateValue);
+            }
+            
+            fieldColumn++;
+          }
+
+          projectTypeFlows[projectType]["stageEmails"] = emailNotifFields;
+          projectTypeFlows[projectType]["stageSlacks"] = slackNotifFields;
+          projectTypeFlows[projectType]["stageDocs"] = docTemplateFields;
+          projectTypeFlows[projectType]["stageActions"] = actionTemplateFields;      
+        }
+        //console.log("projectTypeFlows (" + i + "):");       
+        
+      }catch(e){
+        // console.log("getProjectWorkflow, error: "); 
+        console.log(e); 
+      }
+    }
+    //console.log(projectTypeFlows["Merchant"]["Engineering"]); 
+    //console.log(projectTypeFlows); 
+
+    return projectTypeFlows;
+  }  
+
+
+  function hideProject(projectId){
+    $('#aggregate_view').show();
+    $('#project_view').hide();
+    $('#page_controls').show();
+    
+  }
+  
+  function buildActionTable(project, actionStatus){
+    var projectId = project[0];
+
+    var actionContainer;
+
+    switch(actionStatus) {
+      case "Active":
+        actionContainer = "current_actions"
+        break;
+      case "Not Started":
+        actionContainer = "next_actions"
+        break; 
+      case "Complete":
+        actionContainer = "completed_actions"
+        break;           
+    }
+    // console.log("actionContainer: " + actionContainer);
+    var table_body = '<table id="' + actionContainer + '_table" class="table table-striped table-sm table-hover table-bordered">';
+      table_body += '<thead>';
+      table_body += '<th>Action</th>';
+      table_body += '<th>Owner</th>';
+      table_body += '<th>Edit</th>';
+      table_body += '</tr>';
+      table_body += '</thead>';
+      table_body += '<tbody>';  
+
+    var rowCount = plData.actionsData.length;    
+    for (var i = 0; i < rowCount; i++) {
+      try{  
+        var action = plData.actionsData[i];
+        if (parseInt(action[0]) == parseInt(projectId) && action[5] != "" && action[9] != "" && action[6] == actionStatus) {
+          var obj = {rowID:'row_'+i, a_status:action[6] , actionID: action[1], action: action[5], owner: action[9]!==undefined ? action[9] : ''};
+          table_body += '<tr id="row_' + i + '">';
+          table_body += '<td>' + action[5] + '</a></td>';
+          const actionCondition = (action[9] == undefined) ? table_body += '<td>' + '-' + '</td>' : table_body += '<td>' + action[9] + '</td>'
+          table_body += `<td><button type="button" class="btn btn-primary mr-auto" onclick="ActionsEdit('${encodeURIComponent(JSON.stringify(obj))}')">Edit</button></td>`;
+          table_body += '</tr>';
+          
+        }
+      }catch(e){
+        console.log(e); 
+      }
+    }
+  
+    table_body += '</tbody>';
+    table_body += '</table>';
+
+    // console.log(table_body);
+    $('#' + actionContainer).html(table_body);    
+    
+  }
+
+  function getProjectData(projectId){
+    var rowCount = plData.projectsData.length;               
+
+    for (var i = 0; i < rowCount; i++) {
+      if(plData.projectsData[i][0] == projectId){
+        return plData.projectsData[i];
+      }
+    }
+  }
+
+  function getAllActionsData(projectId){
+    var rowCount = plData.actionsData.length;               
+
+    for (var i = 0; i < rowCount; i++) {
+      if(plData.actionsData[i][0] == projectId){
+        return plData.actionsData[i];
+      }
+    }
+  }
+
+  function buildResourceTable(project){
+    
+    var projectId = project[0];
+    
+    var resourceContainer = "resources";
+
+    var table_body = '<table id="' + resourceContainer + '_table" class="table table-striped table-sm table-hover table-bordered">';
+      table_body += '<thead>';
+      table_body += '<th>Resource</th>';
+      table_body += '<th>Owner</th>';
+      table_body += '</tr>';
+      table_body += '</thead>';
+      table_body += '<tbody>'; 
+
+    var rowCount = plData.resourcesData.length;               
+    for (var i = 0; i < rowCount; i++) {
+      try{
+        var resource = plData.resourcesData[i];
+        // console.log(resource[0]);
+        // console.log(parseInt(projectId));
+        // console.log(resource[4]);
+        // console.log(resource[6]);
+        var resource = plData.resourcesData[i];
+        if (parseInt(resource[0]) == parseInt(projectId) && resource[4] != "" && resource[6] != "") {
+        //<a href="' + resource[7] +'">'
+          table_body += '<tr>';
+          table_body += '<td>' + resource[4] + '</a></td>';
+          table_body += '<td>' + resource[6] + '</td>';
+          table_body += '</tr>';
+        }
+      }catch(e){
+        console.log(e); 
+      }
+    }
+  
+    table_body += '</tbody>';
+    table_body += '</table>';
+
+    // console.log(table_body);
+    $('#' + resourceContainer).html(table_body);    
+    
+  }
+
+</script>

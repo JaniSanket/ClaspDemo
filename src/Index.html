@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+	<script src="https://cdn.datatables.net/1.10.23/js/jquery.dataTables.min.js"></script>
+	<script src="https://cdn.datatables.net/1.10.23/js/dataTables.bootstrap4.min.js"></script>
+	<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+	<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.css" />
+	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.23/css/dataTables.bootstrap4.min.css" />
+	<?!= include("css") ?>
+	<?!= include("javascript") ?>
+	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+</head>
+
+<body>
+<!--------------- Main Buttons Home Page ----------------->
+
+
+
+	<div id="dataDiv" style="display:none;"><?=projectsData?></div>
+	<div id="page_controls">
+		<form action="#">
+			<fieldset>
+        <!-- Slider Zoom --/>
+        <!-- ----------------------- ------------->
+        <!-- <input id="test-zoom" min="1" max="100" value='10' step="1" onchange="showVal(this.value)" type="range"/> -->
+        <!-- ----------------------- ------------->
+        <span class="view_button"><button type="button" class="btn btn-primary mb-3" onclick="showRoadmap()">Roadmap</button></span>
+        <span class="view_button"><button type="button" class="btn btn-primary mb-3" onclick="showProjectTable()">Project List</button></span>
+        <label for="project_type">Project type</label>
+
+        <!-- <label for="project_type">Project typsdfasfe</label> -->
+        
+        
+				<select name="project_type" id="project_type">
+          <option value="all" selected="selected">all</option>
+          <option value="Engineering">Engineering</option>
+          <option value="Merchant">Merchant</option>
+          <option value="Marketing">Marketing</option>
+          <option value="Sales">Sales</option>
+          <option value="CS">CS</option>   
+          <option value="Demo">demo</option>
+        </select>
+
+        <input type="text" id="text" hidden>
+        <input type="text" id="text10" hidden>
+        <input type="text" id="textWidth10" hidden>
+
+        <div id="zoombtn" class="float-right ml-2" style="margin-right: 10vw;">
+          <button type="button" id="zoomin" class="btn btn-primary mb-3" onclick="zoomIn()">Zoom-In</button>
+          <button type="button" id="zoomout" class="btn btn-primary mb-3" onclick="zoomOut()">Zoom-Out</button>
+        </div>
+        <!-- <button type="button" class="btn btn-primary mb-3" onclick="reload()">Reload</button> -->
+
+        <!-- <div>         
+          <button class="ui-button ui-widget ui-corner-all view_button" id="roadmap">Roadmap</button>
+          <button class="ui-button ui-widget ui-corner-all view_button" id="project_list">Projects</button>         
+        </div> -->
+				<!--<label for="view_type">Change view</label>
+				<select name="view_type" id="view_type">
+          <option value="roadmap" selected="selected">Roadmap</option>
+          <option value="project_list">Project List</option>            
+        </select>
+        -->
+  <!--  <label for="start_date">Start date</label>
+        <input type="text" name="start_date" id="start_date">
+        <label for="end_date">End date view</label>
+        <input type="text" name="end_date" id="end_date">-->
+			</fieldset>
+		</form>
+	</div>
+
+<!--------------- Main Home Page -----------------> 
+
+<div id="aggregate_view">
+
+    <!--------- Project table container ----------->
+
+    <div id="projects_table_container" style="display:none"></div>
+        
+    <!---------- Gantt view container ------------>
+    <div id="gantt_container" class="gantt_class" style="display:block">
+      <div id="gantt_titles_overlay" class="gantt_titles_div"></div>
+        <div id="gantt_titles" class="gantt_titles_div">
+          <div id="gantt_titles_inner"></div>
+        </div>
+      <div id="gantt_test"></div>
+      <div id="gantt_inner_container">
+        <div id="gantt_drag_box">
+          <div id="gantt_view">
+            <div id="gantt_title_mask_div">mask</div> 
+            <div id="chart_div" style="position: relative;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+
+<!------------- Single Project Summary container --------------->
+
+<div id="projectdetail_view" style="display:none">
+  <div id="title_header" class="text-center"></div>
+  <!-- <div><button class="ui-button ui-widget ui-corner-all back_button">Back</button></div> -->
+  <div id="workflow"></div>
+  <div class="text-center" id="stage_banner"><img id="stage_banner_img" src=""/></div>
+  <div class="mx-auto mt-4 shadow p-3 mb-5 bg-white rounded" style="width: 962px;">
+    <div class="section_header"><div class="a">Motivation</div>
+      <button type="button" class="btn btn-primary float-right" onclick="motivationEdit()" style="margin-top: -34px;">Edit</button>
+    </div>
+    <div class="section_body mt-4" id="project_motivation"></div>
+  </div>
+  <div class="mx-auto mt-4 shadow p-3 mb-5 bg-white rounded" style="width: 962px;">
+    <div class="section_header"><div class="b">Status Summary</div>
+      <button type="button" class="btn btn-primary float-right" onclick="statusSummaryEdit()" style="margin-top: -34px;">Edit</button>
+    </div>
+    <div class="section_body mt-4" id="project_summary"></div>
+  </div>
+  <div class="mx-auto mt-4 shadow p-3 mb-5 bg-white rounded" style="width: 962px;">
+    <div class="section_header"><div class="c">Resources</div>
+      <button type="button" class="btn btn-primary float-right" onclick="resourceEdit()" style="margin-top: -34px;">Edit</button>
+    </div>
+    <div class="section_body mt-4" id="resources"></div>
+  </div>
+  <div class="mx-auto mt-4 shadow p-3 mb-5 bg-white rounded" style="width: 962px;">
+    <div class="section_header"><div class="d">Current Actions</div>
+      <!-- ----------------------- ------------->
+      <!-- <button type="button" class="btn btn-dark float-right" id="current_Act" style="margin-top: -34px;">Add</button> -->
+      <!-- ----------------------- ------------->
+    </div>
+    <div class="section_body mt-4" id="current_actions"></div>
+  </div>
+  <div class="mx-auto mt-4 shadow p-3 mb-5 bg-white rounded" style="width: 962px;">
+    <div class="section_header"><div class="e">Next Actions</div>
+      <!-- ----------------------- ------------->
+      <!-- <button type="button" class="btn btn-dark float-right" id="next_Act" style="margin-top: -34px;">Add</button> -->
+      <!-- ----------------------- ------------->
+    </div>
+    <div class="section_body mt-4" id="next_actions"></div>
+  </div>
+  <div class="mx-auto mt-4 shadow p-3 mb-5 bg-white rounded" style="width: 962px;">
+    <div class="section_header"><div class="f">Completed Actions</div>
+      <!-- ----------------------- ------------->
+      <!-- <button type="button" class="btn btn-dark float-right" id="completed_Act" style="margin-top: -34px;">Add</button> -->
+      <!-- ----------------------- ------------->
+    </div>
+    <div class="section_body mt-4" id="completed_actions"></div>
+  </div>
+  <!-- <div><button class="ui-button ui-widget ui-corner-all back_button">Back</button></div> -->
+  <div class="text-center">
+    <button type="button" class="btn btn-primary mb-3" onclick="showSummaryBack()">Back</button>
+  </div>
+</div>
+
+<!----------------- First Pop Up ---------------->
+
+<div id="project_view" class="text-center" style="display:none">
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content" style="width:119%;">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel"style="width: 100%;text-align: center;"><p id="pro_header"></p></h5>
+            <button type="button" id="close-btn" class="close" data-dismiss="modal" aria-label="Close" onclick="showGanttChartAgain()">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group" hidden>
+              <label for="exampleInputPassword1">Id</label>
+              <input type="text" class="form-control" id="p_Id">
+            </div>
+            <div class="form-group" hidden>
+              <label for="exampleInputEmail1">Title</label>
+              <input type="text" class="form-control" id="poject_title" aria-describedby="emailHelp">
+            </div>
+            <div class="form-group">
+              <label for="exampleInputPassword1">Start Date</label>
+              <input type="text" class="form-control" id="S_date">
+            </div>
+            <div class="form-group">
+              <label for="exampleInputPassword1">End Date</label>
+              <input type="text" class="form-control" id="E_date">
+            </div>
+            <div class="form-group" hidden>
+              <label for="exampleInputPassword1" >Duration</label>
+              <input type="text" class="form-control" id="poject_duration">
+            </div>
+            <div class="form-group" hidden>
+              <label for="exampleInputEmail1">Depends On</label>
+              <input type="text" class="form-control" id="poject_depends" aria-describedby="emailHelp">
+            </div>
+            <div class="form-group" hidden>
+              <label for="exampleInputPassword1">Show On Chart</label>
+              <input type="text" class="form-control" id="poject_showIt">
+            </div>
+            <div class="form-group">
+              <label for="exampleInputEmail1">Percent Complete</label>
+              <input type="text" class="form-control" id="poject_complete" aria-describedby="emailHelp">
+            </div>
+            <div class="form-group" hidden>
+              <label for="exampleInputPassword1">Summary</label>
+              <input type="text" class="form-control" id="poject_summary">
+            </div>
+            <div class="form-group" hidden>
+              <label for="exampleInputPassword1">Motivation</label>
+              <input type="text" class="form-control" id="poject_motivation">
+            </div>
+            <!-- <div class="form-group" hidden>
+              <label for="exampleInputPassword1">Resouce</label>
+              <input type="text" class="form-control" id="poject_resouce">
+            </div> -->
+            <div class="form-group" hidden>
+              <label for="exampleInputPassword1">Project Type</label>
+              <input type="text" class="form-control" id="poject_type">
+            </div>
+            <div class="form-group" hidden>
+              <label for="exampleInputPassword1">Lifecycle Stage</label>
+              <input type="text" class="form-control" id="poject_lifecycle">
+            </div>
+            <div class="form-group" hidden>
+              <label for="exampleInputPassword1">Priority</label>
+              <input type="text" class="form-control" id="poject_priority">
+            </div>
+            <div class="form-group" hidden>
+              <label for="exampleInputPassword1">Program</label>
+              <input type="text" class="form-control" id="poject_program">
+            </div>
+            <div class="form-group" hidden>
+              <label for="exampleInputPassword1">Status</label>
+              <input type="text" class="form-control" id="poject_status">
+            </div>
+            <div class="form-group" hidden>
+              <label for="exampleInputPassword1">Notes</label>
+              <input type="text" class="form-control" id="poject_notes">
+            </div>
+            <div class="form-group" hidden>
+              <label for="exampleInputPassword1">Stackholders</label>
+              <input type="text" class="form-control" id="poject_stackholder">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary mr-auto" onclick="fullProjectEdit()">View Project</button>
+            <button type="button" class="btn btn-warning mr-auto" onclick="kanbanBtn()">Kanban</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="showGanttChartAgain()">Close</button>
+            <button type="button" class="btn btn-primary" onclick="showSummary()">Project Summary</button>
+            <button type="button" class="btn btn-primary" onclick="putGanttData();setTimeout(reload, 1000)">Save</button>
+          </div>
+        </div>
+      </div>
+  </div>
+</div>
+
+<div class="modal fade" id="exampleModal2" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <!-- <h5 class="modal-title" id="exampleModalLabel">Modal title</h5> -->
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"  onclick="showGanttChartAgain()">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        Changes Saved
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal"  onclick="showGanttChartAgain()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!----------------- full edit ---------------->
+
+<div id="full-edit" style="display:none">
+  <div class="text-center"><p id="fullEditHeader"></p></div>
+  <div class="row" style="margin-top: -4vw;">
+    <div class="col-12 col-sm-12 col-md-12 col-lg-6 col-xl-6 mx-auto" style="margin-top: 4vw;">
+      <div class="form-group" hidden>
+        <label for="exampleInputPassword1">Id</label>
+        <input type="text" class="form-control" id="pfull_Id">
+      </div>
+      <div class="form-group">
+        <label for="exampleInputEmail1">Title</label>
+        <input type="text" class="form-control" id="pojectfull_title" aria-describedby="emailHelp">
+      </div>
+      <div class="form-group">
+        <label for="exampleInputPassword1">Start Date</label>
+        <input type="text" class="form-control" id="Sfull_date">
+      </div>
+      <div class="form-group">
+        <label for="exampleInputPassword1">End Date</label>
+        <input type="text" class="form-control" id="Efull_date">
+      </div>
+      <div class="form-group">
+        <label for="exampleInputPassword1" >Duration</label>
+        <input type="text" class="form-control" id="pojectfull_duration">
+      </div>
+      <div class="form-group">
+        <label for="exampleInputEmail1">Depends On</label>
+        <input type="text" class="form-control" id="pojectfull_depends" aria-describedby="emailHelp">
+      </div>
+      <div class="form-group">
+        <label for="exampleInputPassword1">Show On Chart</label>
+        <select class="form-control" name="showIt" id="pojectfull_showIt">
+          <option value="TRUE">TRUE</option>
+          <option value="FALSE">FALSE</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="exampleInputEmail1">Percent Complete</label>
+        <input type="text" class="form-control" id="pojectfull_complete" aria-describedby="emailHelp">
+      </div>
+      <div class="form-group">
+        <label for="exampleInputPassword1">Summary</label>
+        <input type="text" class="form-control" id="pojectfull_summary">
+      </div>
+      <div class="form-group">
+        <label for="exampleInputPassword1">Motivation</label>
+        <input type="text" class="form-control" id="pojectfull_motivation">
+      </div>
+      <!-- <div class="form-group">
+        <label for="exampleInputPassword1">Resouce</label>
+        <input type="text" class="form-control" id="pojectfull_resouce">
+      </div> -->
+      <div class="form-group">
+        <label for="exampleInputPassword1">Project Type</label>
+        <select class="form-control" name="pro_types" id="pojectfull_type">
+          <option value="V3 Models Onboarding">V3 Models Onboarding</option>
+          <option value="Development">Development</option>
+          <option value="New Merchant Onboarding">New Merchant Onboarding</option>
+          <option value="Marketing">Marketing</option>
+          <option value="Customer Success">Customer Success</option>
+          <option value="Sales">Sales</option>
+          <option value="Engineering Admin">Engineering Admin</option>
+          <option value="Engineering Infrastructure">Engineering Infrastructure</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="exampleInputPassword1">Lifecycle Stage</label>
+        <input type="text" class="form-control" id="pojectfull_lifecycle">
+      </div>
+      <div class="form-group">
+        <label for="exampleInputPassword1">Priority</label>
+        <input type="text" class="form-control" id="pojectfull_priority">
+      </div>
+      <div class="form-group">
+        <label for="exampleInputPassword1">Program</label>
+        <input type="text" class="form-control" id="pojectfull_program">
+      </div>
+      <div class="form-group">
+        <label for="exampleInputPassword1">Status</label>
+        <input type="text" class="form-control" id="pojectfull_status">
+      </div>
+      <div class="form-group">
+        <label for="exampleInputPassword1">Notes</label>
+        <input type="text" class="form-control" id="pojectfull_notes">
+      </div>
+      <div class="form-group">
+        <label for="exampleInputPassword1">Stackholders</label>
+        <input type="text" class="form-control" id="pojectfull_stackholder">
+      </div>
+      <div class="text-center mb-3">
+        <button type="button" class="btn btn-primary" onclick="fullProjectEditBack()">Back</button>
+        <button type="button" class="btn btn-success" onclick="putFullGanttData();setTimeout(reload, 1000)">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="exampleModal3" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <!-- <h5 class="modal-title" id="exampleModalLabel">Modal title</h5> -->
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"  onclick="showFullEditAgain()">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        Changes Saved
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal"  onclick="showFullEditAgain()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!----------------- Motivation Edit ---------------->
+
+<div class="modal fade text-center" id="motivationModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel"style="width: 100%;text-align: center;"><p id="motivation_header"></p></h5>
+          <button type="button" id="close-btn" class="close" data-dismiss="modal" aria-label="Close" onclick="showSummaryAgain()">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group" hidden>
+            <label for="exampleInputPassword1">Id</label>
+            <input type="text" class="form-control" id="onlymotivationPId">
+          </div>
+          <div class="form-group">
+            <label for="exampleInputPassword1">Motivation</label>
+            <input type="text" class="form-control" id="onlyMotivation">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="showSummaryAgain()">Close</button>
+          <button type="button" class="btn btn-primary" onclick="putMotivationData()">Save</button>
+        </div>
+      </div>
+    </div>
+</div>
+
+<!----------------- Status Summary Edit ---------------->
+
+<div class="modal fade text-center" id="statusSummaryModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel"style="width: 100%;text-align: center;"><p id="summary_header"></p></h5>
+          <button type="button" id="close-btn" class="close" data-dismiss="modal" aria-label="Close" onclick="showSummaryAgain()">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group" hidden>
+            <label for="exampleInputPassword1">Id</label>
+            <input type="text" class="form-control" id="onlysummaryPId">
+          </div>
+          <div class="form-group">
+            <label for="exampleInputPassword1">Status Summary</label>
+            <input type="text" class="form-control" id="onlySummary">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="showSummaryAgain()">Close</button>
+          <button type="button" class="btn btn-primary" onclick="putstatusSummaryData()">Save</button>
+        </div>
+      </div>
+    </div>
+</div>
+
+<!----------------- Resources Edit ---------------->
+
+<div class="modal fade text-center" id="resourcesModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel"style="width: 100%;text-align: center;"><p id="resources_header"></p></h5>
+          <button type="button" id="close-btn" class="close" data-dismiss="modal" aria-label="Close" onclick="showSummaryAgain()">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group" hidden>
+            <label for="exampleInputPassword1">Id</label>
+            <input type="text" class="form-control" id="onlyresourcesPId">
+          </div>
+          <div class="form-group">
+            <label for="exampleInputPassword1">Resource</label>
+            <select class="form-control" name="onlyresourcesType" id="onlyresourcesType">
+              <option value="V3 Models Onboarding">V3 Models Onboarding</option>
+              <option value="Development">Development</option>
+              <option value="Onboard New Merchant">Onboard New Merchant</option>
+              <option value="Marketing">Marketing</option>
+              <option value="Sales">Sales</option>
+              <option value="Engineering Admin">Engineering Admin</option>
+              <option value="Engineering Infrastructure">Engineering Infrastructure</option>
+            </select>
+          </div>
+          <div class="form-group" id="dropLifecycle"></div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="showSummaryAgain()">Close</button>
+          <button type="button" class="btn btn-primary" onclick="putresourcesData()">Save</button>
+        </div>
+      </div>
+    </div>
+</div>
+
+<!----------------- Actions Edit ---------------->
+
+<div class="modal fade text-center" id="ActionsModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel"style="width: 100%;text-align: center;"><p id="current_header"></p></h5>
+          <button type="button" id="close-btn" class="close" data-dismiss="modal" aria-label="Close" onclick="showSummaryAgain()">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group" hidden>
+            <label for="exampleInputPassword1">Row Id</label>
+            <input type="text" class="form-control" id="rowId">
+          </div>
+          <div class="form-group" hidden>
+            <label for="exampleInputPassword1">Action Status</label>
+            <input type="text" class="form-control" id="AStatus">
+          </div>
+          <div class="form-group" hidden>
+            <label for="exampleInputPassword1">Action Id</label>
+            <input type="text" class="form-control" id="currentId">
+          </div>
+
+          <div class="form-group">
+            <label for="exampleInputPassword1">Actions</label>
+            <input type="text" class="form-control" id="currentAction">
+          </div>
+          <div class="form-group">
+            <label for="exampleInputPassword1">Owner</label>
+            <input type="text" class="form-control" id="currentOwner">
+          </div>
+          <!-- <div id="current-actions"></div> -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="showSummaryAgain()">Close</button>
+          <button type="button" class="btn btn-primary" onclick="putActionsData()">Save</button>
+        </div>
+      </div>
+    </div>
+</div>
+
+<!----------------- Actions Add ---------------->
+
+<div id="ActionsAddModal" style="display:none">
+  <div class="text-center"><p id="actionsHeader"></p></div>
+  <div class="row" style="margin-top: -3vw;">
+    <div class="col-12 col-sm-12 col-md-12 col-lg-6 col-xl-6 mx-auto shadow p-3 mb-5 bg-white rounded" style="margin-top: 4vw;">
+      <div class="text-center"><p id="actionHeader_name"></p></div>
+      <div class="form-group" hidden>
+        <label for="exampleInputPassword1">Id</label>
+        <input type="text" class="form-control" id="actionProId">
+      </div>
+      <div class="form-group">
+        <label for="exampleInputPassword1">Start Date</label>
+        <input type="text" class="form-control" id="SA_date">
+      </div>
+      <div class="form-group">
+        <label for="exampleInputPassword1">End Date</label>
+        <input type="text" class="form-control" id="EA_date">
+      </div>
+      <div class="form-group">
+        <label for="exampleInputPassword1" >Estimated Duration</label>
+        <input type="text" class="form-control" id="actionDuration">
+      </div>
+      <div class="form-group">
+        <label for="exampleInputEmail1">Action Name<span class="ml-2" style="color:red;font-size: 16px;">(Required)</span></label>
+        <input type="text" class="form-control" id="actionName" required>
+      </div>
+      <div class="form-group">
+        <label for="exampleInputEmail1">Action Status</label>
+        <input type="text" class="form-control" id="actionStatus" readonly>
+      </div>
+      <div class="form-group">
+        <label for="exampleInputPassword1">Action Type</label>
+        <input type="text" class="form-control" id="actionType">
+      </div>
+      <div class="form-group">
+        <label for="exampleInputPassword1">Action Link</label>
+        <input type="text" class="form-control" id="actionLink">
+      </div>
+      <div class="form-group">
+        <label for="exampleInputPassword1">Action Owner<sapn class="ml-2" style="color:red;font-size: 16px;">(Required)</span></label>
+        <input type="text" class="form-control" id="actionOwner" required>
+      </div>
+      <div class="form-group">
+        <label for="exampleInputPassword1">Depends on</label>
+        <input type="text" class="form-control" id="actionDepends">
+      </div>
+      <div class="form-group">
+        <label for="exampleInputPassword1">Notes</label>
+        <input type="text" class="form-control" id="actionNotes">
+      </div>
+      <div class="text-center mb-3">
+        <button type="button" class="btn btn-primary" onclick="showSummaryAgain()">Back</button>
+        <button type="button" class="btn btn-success" id="actionAddSave" onclick="addActionsData()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!----------------- Project Summary "Changes Saved" Pop Up ---------------->
+
+<div class="modal fade" id="exampleModal4" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <!-- <h5 class="modal-title" id="exampleModalLabel">Modal title</h5> -->
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"  onclick="showSummaryAgain()">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        Changes Saved
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal"  onclick="showSummaryAgain()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!----------------- Actions Add Validation Pop Up ---------------->
+
+<div class="modal fade" id="addActionRequired" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <!-- <h5 class="modal-title" id="exampleModalLabel">Modal title</h5> -->
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"  onclick="validationBack()">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="DataAddedMsg">
+        
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal"  onclick="validationBack()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!----------------- Action Data Added Successfully Pop Up ---------------->
+
+<div class="modal fade" id="exampleModal5" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <!-- <h5 class="modal-title" id="exampleModalLabel">Modal title</h5> -->
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"  onclick="showSummaryAgain()">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        Data Added Successfully
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal"  onclick="showSummaryAgain()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-----------------------  Kanban -------------------------------->
+
+<div id="kanban-new" style="display:none">
+  <div class="text-center"><p id="kanbanHeader" style="margin-top: 4vw;font-size: 33px;color: #605e5e;"></p></div>
+  <div class="row" style="margin-top: 4vw;">
+    <div class="col-12 col-sm-12 col-md-12 col-lg-6 col-xl-6 mx-auto">
+      <div class="form-group" hidden>
+        <label for="exampleInputPassword1">Board ID</label>
+        <input type="text" class="form-control" id="kanban_board">
+      </div>
+      <div class="row">
+        <div class="col-xl-6 col-lg-6 col-md-6">
+          <div id="parent-card">
+            <div class="form-group">
+              <label for="exampleInputPassword1">Parent Task</label>
+              <input type="text" class="form-control" id="kanban_PName">
+            </div>
+            <div class="form-group">
+              <label for="exampleInputPassword1">Parent Column Name</label>
+              <select class="form-control" name="kanban_Pcolumn" id="kanban_Pcolumn">
+                <option value="Requested">Requested</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Done">Done</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="exampleInputPassword1">Parent Lane Name</label>
+              <select class="form-control" name="kanban_Plane" id="kanban_Plane">
+                <option value="Portfolio Lane">Portfolio Lane</option>
+                <!-- <option value="Test Main Swimlane">Test Main Swimlane</option> -->
+                <!-- <option value="Default Swimlane">Default Swimlane</option> -->
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="exampleInputPassword1">Parent Assignee</label>
+              <input type="text" class="form-control" id="kanban_Passign">
+            </div>
+            <div class="form-group">
+              <label for="exampleInputPassword1">Parent Card Color</label>
+              <input type="color" class="form-control" id="kanban_Pcolor">
+            </div>
+            <div class="form-group">
+              <label for="exampleInputPassword1">Parent Description</label>
+              <input type="text" class="form-control" id="kanban_Pdec">
+            </div>
+            <div class="form-group">
+              <label for="exampleInputPassword1">Parent Priority</label>
+              <select class="form-control" name="kanban_Ppriority" id="kanban_Ppriority">
+                <option value="Low">Low</option>
+                <option value="Average">Average</option>
+                <option value="High">High</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="exampleInputPassword1">Parent Deadline</label>
+              <input type="date" class="form-control" id="kanban_Pdead">
+            </div>
+            <div class="form-group">
+              <label for="exampleInputEmail1">Parent subtasks</label>
+              <input type="text" class="form-control" id="kanban_Psubtask" aria-describedby="emailHelp">
+            </div>
+            <div class="form-group">
+              <label for="exampleInputEmail1">Parent Tags</label>
+              <input type="text" class="form-control" id="kanban_Ptag" aria-describedby="emailHelp">
+            </div>
+            <div class="form-group">
+              <label for="exampleInputEmail1">Parent Size</label>
+              <input type="text" class="form-control" id="kanban_Psize" aria-describedby="emailHelp">
+            </div>
+            <div class="form-group">
+              <label for="exampleInputEmail1">Parent extlink</label>
+              <input type="text" class="form-control" id="kanban_Pextlink" aria-describedby="emailHelp">
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-6 col-lg-6 col-md-6">
+          <div id="child-card">
+            <div class="form-group">
+              <label for="exampleInputEmail1">Child Task</label>
+              <input type="text" class="form-control" id="kanban_CName" name="kanban_CName[]" aria-describedby="emailHelp">
+            </div>
+            <div class="form-group">
+              <label for="exampleInputPassword1">Child Column Name</label>
+              <select class="form-control" name="kanban_Ccolumn[]" id="kanban_Ccolumn">
+                <option value="Requested">Requested</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Done">Done</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="exampleInputPassword1">Child Lane Name</label>
+              <select class="form-control" name="kanban_Clane[]" id="kanban_Clane">
+                <!-- <option value="Portfolio Lane">Portfolio Lane</option>
+                <option value="Test Main Swimlane">Test Main Swimlane</option> -->
+                <option value="Default Swimlane">Default Swimlane</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="exampleInputEmail1">Child Assignee</label>
+              <input type="text" class="form-control" id="kanban_Cassign" name="kanban_Cassign[]" aria-describedby="emailHelp">
+            </div>
+            <div class="form-group">
+              <label for="exampleInputEmail1">Child Card Color</label>
+              <input type="color" class="form-control" id="kanban_Ccolor" name="kanban_Ccolor[]" aria-describedby="emailHelp">
+            </div>
+            <div class="form-group">
+              <label for="exampleInputEmail1">Child Description</label>
+              <input type="text" class="form-control" id="kanban_Cdec" name="kanban_Cdec[]" aria-describedby="emailHelp">
+            </div>
+            <div class="form-group">
+              <label for="exampleInputPassword1">Child Priority</label>
+              <select class="form-control" name="kanban_Cpriority[]" id="kanban_Cpriority">
+                <option value="Low">Low</option>
+                <option value="Average">Average</option>
+                <option value="High">High</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="exampleInputEmail1">Child Deadline</label>
+              <input type="date" class="form-control" id="kanban_Cdead" name="kanban_Cdead[]" aria-describedby="emailHelp">
+            </div>
+            <div class="form-group">
+              <label for="exampleInputEmail1">Child subtasks</label>
+              <input type="text" class="form-control" id="kanban_Csubtask" name="kanban_Csubtask[]" aria-describedby="emailHelp">
+            </div>
+            <div class="form-group">
+              <label for="exampleInputEmail1">Child Tags</label>
+              <input type="text" class="form-control" id="kanban_Ctag" name="kanban_Ctag[]" aria-describedby="emailHelp">
+            </div>
+            <div class="form-group">
+              <label for="exampleInputEmail1">Child Size</label>
+              <input type="text" class="form-control" id="kanban_Csize" name="kanban_Csize[]" aria-describedby="emailHelp">
+            </div>
+            <div class="form-group">
+              <label for="exampleInputEmail1">Child extlink</label>
+              <input type="text" class="form-control" id="kanban_Cextlink" name="kanban_Cextlink[]" aria-describedby="emailHelp">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="text-center">
+        <button type="button" class="btn btn-primary" onclick="kanbanBackBtn()">Back</button>
+        <button type="button" class="btn btn-primary" onclick="kanbanSave()">Save</button>
+        <button type="button" class="btn btn-primary" onclick="kanbanEditBtn()">Edit Card</button>
+        <button type="button" class="btn btn-primary" onclick="kanbanDeleteBtn()">Delete Card</button>
+        <!-- <button type="button" class="btn btn-primary" onclick="duplicate()">Add Another Child</button> -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-----------------------  Kanban Edit(Select The Board) -------------------------------->
+
+<div id="kanban-edit" style="display:none">
+  <div class="text-center"><p id="kanbanEditHeader" style="margin-top: 4vw;font-size: 33px;color: #605e5e;"></p></div>
+    <div class="row" style="margin-top: 4vw;">
+      <div class="col-12 col-sm-12 col-md-12 col-lg-6 col-xl-6 mx-auto">
+        <div class="form-group">
+          <label for="exampleInputEmail1">Select The Card</label>
+          <div id="kanbanCardsDropdown"></div>
+        </div>
+        <div class="form-group">
+          <label for="exampleInputEmail1">Task Title</label>
+          <input type="text" class="form-control" id="kanban_editTitle" aria-describedby="emailHelp">
+        </div>
+        <div class="form-group">
+          <label for="exampleInputEmail1">Task Description</label>
+          <input type="text" class="form-control" id="kanban_editdec" aria-describedby="emailHelp">
+        </div>
+        <div class="form-group">
+          <label for="exampleInputEmail1">Task color</label>
+          <input type="color" class="form-control" id="kanban_editcolor" aria-describedby="emailHelp">
+        </div>
+        <button type="button" class="btn btn-primary" onclick="kanbanEditBack()">Back</button>
+        <button type="button" class="btn btn-primary" onclick="kanbanEditSave()">Save</button>
+      </div>
+    </div>
+</div>
+
+<!-----------------------  Kanban Delete -------------------------------->
+
+<div id="kanban-delete" style="display:none">
+  <div class="text-center"><p id="kanbanDeleteHeader" style="margin-top: 4vw;font-size: 33px;color: #605e5e;"></p></div>
+    <div class="row" style="margin-top: 4vw;">
+      <div class="col-12 col-sm-12 col-md-12 col-lg-6 col-xl-6 mx-auto">
+        <div class="form-group">
+          <label for="exampleInputEmail1">Select The Card</label>
+          <div id="kanbanDeleteDropdown"></div>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="kanbanDeleteBack()">Back</button>
+        <button type="button" class="btn btn-primary" onclick="kanbanDeleteSave()">Delete</button>
+      </div>
+    </div>
+</div>
+
+</body>
+
+</html>

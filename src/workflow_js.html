@@ -1,0 +1,26 @@
+<script src="https://unpkg.com/react@15/dist/react.js"></script>
+<script src="https://unpkg.com/react-dom@15/dist/react-dom.js"></script>
+<script>
+	
+   $(document).ready(function() {
+
+      drawWorkflow();
+
+       class Greetings extends React.Component
+        {
+            render()
+            {
+                return React.createElement('h1', null, 'Greetings, ' + this.props.name + '!');
+            }
+        }
+
+        ReactDOM.render(
+            React.createElement(Greetings, { name : 'Chris' }),
+            document.getElementById('root')
+        );
+     
+  });
+  function drawWorkflow(){
+      console.log("drw");
+  }
+</script>
