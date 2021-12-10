@@ -1,5 +1,5 @@
 ////////////// Kanbanize Global Variables ////////////////
-Logger.log("Hello1234");
+Logger.log("Hello World");
 const apiUrl = 'https://cloudd8.kanbanize.com/index.php/api/kanbanize/';
 const apiKey_kanban = '84xJL5je9la2AjhoZxJuNorV6R3iFhvZo6ax653k';
 
