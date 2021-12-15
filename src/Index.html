@@ -2,16 +2,16 @@
 <html>
 
 <head>
-	<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
-	<script src="https://cdn.datatables.net/1.10.23/js/jquery.dataTables.min.js"></script>
-	<script src="https://cdn.datatables.net/1.10.23/js/dataTables.bootstrap4.min.js"></script>
-	<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
-	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-	<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.css" />
-	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.23/css/dataTables.bootstrap4.min.css" />
-	<?!= include("css") ?>
-	<?!= include("javascript") ?>
-	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+  <script src="https://cdn.datatables.net/1.10.23/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.10.23/js/dataTables.bootstrap4.min.js"></script>
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.css" />
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.23/css/dataTables.bootstrap4.min.css" />
+  <?!= include("css") ?>
+  <?!= include("javascript") ?>
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 
 </head>
 
@@ -20,10 +20,10 @@
 
 
 
-	<div id="dataDiv" style="display:none;"><?=projectsData?></div>
-	<div id="page_controls">
-		<form action="#">
-			<fieldset>
+  <div id="dataDiv" style="display:none;"><?=projectsData?></div>
+  <div id="page_controls">
+    <form action="#">
+      <fieldset>
         <!-- Slider Zoom --/>
         <!-- ----------------------- ------------->
         <!-- <input id="test-zoom" min="1" max="100" value='10' step="1" onchange="showVal(this.value)" type="range"/> -->
@@ -35,7 +35,7 @@
         <!-- <label for="project_type">Project typsdfasfe</label> -->
         
         
-				<select name="project_type" id="project_type">
+        <select name="project_type" id="project_type">
           <option value="all" selected="selected">all</option>
           <option value="Engineering">Engineering</option>
           <option value="Merchant">Merchant</option>
@@ -59,8 +59,8 @@
           <button class="ui-button ui-widget ui-corner-all view_button" id="roadmap">Roadmap</button>
           <button class="ui-button ui-widget ui-corner-all view_button" id="project_list">Projects</button>         
         </div> -->
-				<!--<label for="view_type">Change view</label>
-				<select name="view_type" id="view_type">
+        <!--<label for="view_type">Change view</label>
+        <select name="view_type" id="view_type">
           <option value="roadmap" selected="selected">Roadmap</option>
           <option value="project_list">Project List</option>            
         </select>
@@ -69,9 +69,9 @@
         <input type="text" name="start_date" id="start_date">
         <label for="end_date">End date view</label>
         <input type="text" name="end_date" id="end_date">-->
-			</fieldset>
-		</form>
-	</div>
+      </fieldset>
+    </form>
+  </div>
 
 <!--------------- Main Home Page -----------------> 
 
@@ -792,10 +792,10 @@
       </div>
       <div class="text-center">
         <button type="button" class="btn btn-primary" onclick="kanbanBackBtn()">Back</button>
-        <button type="button" class="btn btn-primary" onclick="kanbanSave()">Save</button>
+        <button type="button" class="btn btn-primary" onclick="kanbanSave();setTimeout(reload, 3000)">Save</button>
         <button type="button" class="btn btn-primary" onclick="kanbanEditBtn()">Edit Card</button>
         <button type="button" class="btn btn-primary" onclick="kanbanDeleteBtn()">Delete Card</button>
-        <!-- <button type="button" class="btn btn-primary" onclick="duplicate()">Add Another Child</button> -->
+        <button type="button" class="btn btn-primary" onclick="duplicate()">Add Another Child</button>
       </div>
     </div>
   </div>
@@ -809,7 +809,7 @@
       <div class="col-12 col-sm-12 col-md-12 col-lg-6 col-xl-6 mx-auto">
         <div class="form-group">
           <label for="exampleInputEmail1">Select The Card</label>
-          <div id="kanbanCardsDropdown"></div>
+          <div id="kanbanEditDropdown"></div>
         </div>
         <div class="form-group">
           <label for="exampleInputEmail1">Task Title</label>
@@ -824,7 +824,7 @@
           <input type="color" class="form-control" id="kanban_editcolor" aria-describedby="emailHelp">
         </div>
         <button type="button" class="btn btn-primary" onclick="kanbanEditBack()">Back</button>
-        <button type="button" class="btn btn-primary" onclick="kanbanEditSave()">Save</button>
+        <button type="button" class="btn btn-primary" onclick="kanbanEditSave();setTimeout(reload, 1000)">Save</button>
       </div>
     </div>
 </div>
@@ -840,7 +840,7 @@
           <div id="kanbanDeleteDropdown"></div>
         </div>
         <button type="button" class="btn btn-primary" onclick="kanbanDeleteBack()">Back</button>
-        <button type="button" class="btn btn-primary" onclick="kanbanDeleteSave()">Delete</button>
+        <button type="button" class="btn btn-primary" onclick="kanbanDeleteSave();setTimeout(reload, 1000)">Delete</button>
       </div>
     </div>
 </div>

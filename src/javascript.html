@@ -1,5 +1,5 @@
 <script>
-	////////////////Highlighted Area Global Variables/////////////
+  ////////////////Highlighted Area Global Variables/////////////
 
   var janPosition = 299.49919;
   var febPosition = 438.49919;
@@ -19,7 +19,7 @@
 
 ////////////////Gantt Chart Global variables/////////////
 
-	var plData = {};
+  var plData = {};
   var rowData = [];
   var ganttHeight = 500;
   var projectCount = 0;
@@ -54,7 +54,6 @@
 
       jQuery('#zoomin').click();
 
-      console.log('Hello Sanket');
 
       // kanbanBoardsData();
 
@@ -250,8 +249,8 @@
     var ganttBarsWidth = (100/ganttViewPercent) * ganttViewWidth; // 750
 
     var ganttBarsOverlap = ganttBarsWidth - ganttViewWidth; // 150
-    var ganttInnerContainerWidth = ganttBarsWidth + ganttBarsOverlap + ganttTitlesWidth;	// 750 + 150 + 100 = 1000
-    //var ganttInnerContainerWidth = ganttBarsWidth + ganttBarsOverlap;		
+    var ganttInnerContainerWidth = ganttBarsWidth + ganttBarsOverlap + ganttTitlesWidth;  // 750 + 150 + 100 = 1000
+    //var ganttInnerContainerWidth = ganttBarsWidth + ganttBarsOverlap;   
 
     $('#gantt_inner_container').width(ganttInnerContainerWidth); // 750
     $('#gantt_inner_container').css({left:-(ganttBarsOverlap+195)}); // -150 ------>>>>>>>>> Changes
@@ -1265,18 +1264,18 @@ function selectHandler(){
   function setZoom(zoom,el) {
       
       transformOrigin = [0,0];
-	    el = el || instance.getContainer();
-	    var p = ["webkit", "moz", "ms", "o"],
+      el = el || instance.getContainer();
+      var p = ["webkit", "moz", "ms", "o"],
             s = "scale(" + zoom + ")",
             oString = (transformOrigin[0] * 100) + "% " + (transformOrigin[1] * 100) + "%";
 
-	    for (var i = 0; i < p.length; i++) {
-	        el.style[p[i] + "Transform"] = s;
-	        el.style[p[i] + "TransformOrigin"] = oString;
-	    }
+      for (var i = 0; i < p.length; i++) {
+          el.style[p[i] + "Transform"] = s;
+          el.style[p[i] + "TransformOrigin"] = oString;
+      }
 
-	    el.style["transform"] = s;
-	    el.style["transformOrigin"] = oString;
+      el.style["transform"] = s;
+      el.style["transformOrigin"] = oString;
       
   }
 
@@ -1351,15 +1350,13 @@ function selectHandler(){
     $('#exampleModal').css("display","block");
     
     var project = getProjectData(projectId);
-    // console.log(project);
     document.getElementById("kanban_board").value = project[5];
     var temp = document.getElementById("kanban_board").value;
-    console.log(temp);
     $('#pro_header').html(project[5]);
 
     var task_names;
     var task_id;
-    var rowCount = plData.boardsName.length;               
+    var rowCount = plData.boardsName.length;   
     for (var i = 0; i < rowCount; i++) {
       try{
         var resource = plData.boardsName[i];
@@ -1374,11 +1371,10 @@ function selectHandler(){
         console.log(e);
       }
     }
-    console.log('Selected Board tasks:',task_names);
 
     //// Kanban Edit Dropdown ////
 
-    var resourceContainer = "kanbanCards";
+    var resourceContainer = "kanbanCardsEdit";
     var table_body = '<select class="form-control" id="' + resourceContainer + '" onchange="changeValues(event)">';
     table_body += '<option value="Select Card">Select Card</option>';
     for (var i = 0; i < task_names.length; i++) {
@@ -1395,7 +1391,7 @@ function selectHandler(){
       table_body1 += '<option value="'+ task_names[i] +'">'+ task_names[i] +'</option>';
     }
     table_body1 += '</select>';
-    $('#kanbanCardsDropdown').html(table_body);
+    $('#kanbanEditDropdown').html(table_body);
     $('#kanbanDeleteDropdown').html(table_body1);
 
 
@@ -1415,10 +1411,7 @@ function selectHandler(){
   }
 
   function changeValues(e){
-    console.log(onChange_Names);
-    console.log(onChange_Dec);
-    console.log(onChange_Color);
-    var selected_card = document.getElementById("kanbanCards").value;
+    var selected_card = document.getElementById("kanbanCardsEdit").value;
     for (var i = 0; i < onChange_Names.length; i++) {
       if(selected_card == onChange_Names[i]){
         document.getElementById("kanban_editTitle").value = onChange_Names[i];
@@ -1426,14 +1419,6 @@ function selectHandler(){
         document.getElementById("kanban_editcolor").value = onChange_Color[i];
       }
     }
-  }
-  
-  /////////////// Add Another Child Button /////////////////
-
-  var i = 0;
-  function duplicate() {
-    var dummy = '<div class="form-group"><label for="exampleInputEmail1">Child Task</label><input type="text" class="form-control" id="kanban_CName" name="kanban_CName[]" aria-describedby="emailHelp"></div><div class="form-group"><label for="exampleInputPassword1">Child Column Name</label><select class="form-control" name="kanban_Ccolumn[]" id="kanban_Ccolumn"><option value="Requested">Requested</option><option value="In Progress">In Progress</option><option value="Done">Done</option></select></div><div class="form-group"><label for="exampleInputPassword1">Child Lane Name</label><select class="form-control" name="kanban_Clane[]" id="kanban_Clane"><!-- <option value="Portfolio Lane">Portfolio Lane</option><option value="Test Main Swimlane">Test Main Swimlane</option> --><option value="Default Swimlane">Default Swimlane</option></select></div><div class="form-group"><label for="exampleInputEmail1">Child Assignee</label><input type="text" class="form-control" id="kanban_Cassign" name="kanban_Cassign[]" aria-describedby="emailHelp"></div><div class="form-group"><label for="exampleInputEmail1">Child Card Color</label><input type="color" class="form-control" id="kanban_Ccolor" name="kanban_Ccolor[]" aria-describedby="emailHelp"></div><div class="form-group"><label for="exampleInputEmail1">Child Description</label><input type="text" class="form-control" id="kanban_Cdec" name="kanban_Cdec[]" aria-describedby="emailHelp"></div><div class="form-group"><label for="exampleInputPassword1">Child Priority</label><select class="form-control" name="kanban_Cpriority[]" id="kanban_Cpriority"><option value="Low">Low</option><option value="Average">Average</option><option value="High">High</option></select></div><div class="form-group"><label for="exampleInputEmail1">Child Deadline</label><input type="date" class="form-control" id="kanban_Cdead" name="kanban_Cdead[]" aria-describedby="emailHelp"></div><div class="form-group"><label for="exampleInputEmail1">Child subtasks</label><input type="text" class="form-control" id="kanban_Csubtask" name="kanban_Csubtask[]" aria-describedby="emailHelp"></div><div class="form-group"><label for="exampleInputEmail1">Child Tags</label><input type="text" class="form-control" id="kanban_Ctag" name="kanban_Ctag[]" aria-describedby="emailHelp"></div><div class="form-group"><label for="exampleInputEmail1">Child Size</label><input type="text" class="form-control" id="kanban_Csize" name="kanban_Csize[]" aria-describedby="emailHelp"></div><div class="form-group"><label for="exampleInputEmail1">Child extlink</label><input type="text" class="form-control" id="kanban_Cextlink" name="kanban_Cextlink[]" aria-describedby="emailHelp"></div>'; 
-    $("#child-card").append(dummy);
   }
 
   /////////////// Pop Up Back Button /////////////////
@@ -1945,6 +1930,14 @@ function selectHandler(){
     $('#aggregate_view').css("opacity","1");
   }
 
+  /////////////// Add Another Child Button /////////////////
+
+
+function duplicate() {
+  var dummy = '<div class="form-group"><label for="exampleInputEmail1">Child Task</label><input type="text" class="form-control" id="kanban_CName" name="kanban_CName[]" aria-describedby="emailHelp"></div><div class="form-group"><label for="exampleInputPassword1">Child Column Name</label><select class="form-control" name="kanban_Ccolumn[]" id="kanban_Ccolumn"><option value="Requested">Requested</option><option value="In Progress">In Progress</option><option value="Done">Done</option></select></div><div class="form-group"><label for="exampleInputPassword1">Child Lane Name</label><select class="form-control" name="kanban_Clane[]" id="kanban_Clane"><!-- <option value="Portfolio Lane">Portfolio Lane</option><option value="Test Main Swimlane">Test Main Swimlane</option> --><option value="Default Swimlane">Default Swimlane</option></select></div><div class="form-group"><label for="exampleInputEmail1">Child Assignee</label><input type="text" class="form-control" id="kanban_Cassign" name="kanban_Cassign[]" aria-describedby="emailHelp"></div><div class="form-group"><label for="exampleInputEmail1">Child Card Color</label><input type="color" class="form-control" id="kanban_Ccolor" name="kanban_Ccolor[]" aria-describedby="emailHelp"></div><div class="form-group"><label for="exampleInputEmail1">Child Description</label><input type="text" class="form-control" id="kanban_Cdec" name="kanban_Cdec[]" aria-describedby="emailHelp"></div><div class="form-group"><label for="exampleInputPassword1">Child Priority</label><select class="form-control" name="kanban_Cpriority[]" id="kanban_Cpriority"><option value="Low">Low</option><option value="Average">Average</option><option value="High">High</option></select></div><div class="form-group"><label for="exampleInputEmail1">Child Deadline</label><input type="date" class="form-control" id="kanban_Cdead" name="kanban_Cdead[]" aria-describedby="emailHelp"></div><div class="form-group"><label for="exampleInputEmail1">Child subtasks</label><input type="text" class="form-control" id="kanban_Csubtask" name="kanban_Csubtask[]" aria-describedby="emailHelp"></div><div class="form-group"><label for="exampleInputEmail1">Child Tags</label><input type="text" class="form-control" id="kanban_Ctag" name="kanban_Ctag[]" aria-describedby="emailHelp"></div><div class="form-group"><label for="exampleInputEmail1">Child Size</label><input type="text" class="form-control" id="kanban_Csize" name="kanban_Csize[]" aria-describedby="emailHelp"></div><div class="form-group"><label for="exampleInputEmail1">Child extlink</label><input type="text" class="form-control" id="kanban_Cextlink" name="kanban_Cextlink[]" aria-describedby="emailHelp"></div>'; 
+  $("#child-card").append(dummy);
+}
+
   function kanbanSave(){
     var kanban_board = document.getElementById("kanban_board").value;
     var kanban_PName = document.getElementById("kanban_PName").value;
@@ -1960,78 +1953,78 @@ function selectHandler(){
     var kanban_Psize = document.getElementById("kanban_Psize").value;
     var kanban_Pextlink = document.getElementById("kanban_Pextlink").value;
 
-    var kanban_CName = document.getElementById("kanban_CName").value;
-    // var kanban_CName = [];
-    // $("input[name='kanban_CName[]']").each(function() {
-    //     kanban_CName.push($(this).val());
-    // });
-    // console.log(kanban_CName);
-    var kanban_Ccolumn = document.getElementById("kanban_Ccolumn").value;
-    // var kanban_Ccolumn = [];
-    // $("select[name='kanban_Ccolumn[]']").each(function() {
-    //     kanban_Ccolumn.push($(this).val());
-    // });
-    // console.log(kanban_Ccolumn);
-    var kanban_Clane = document.getElementById("kanban_Clane").value;
-    // var kanban_Clane = [];
-    // $("select[name='kanban_Clane[]']").each(function() {
-    //     kanban_Clane.push($(this).val());
-    // });
-    // console.log(kanban_Clane);
-    var kanban_Cassign = document.getElementById("kanban_Cassign").value;
-    // var kanban_Cassign = [];
-    // $("input[name='kanban_Cassign[]']").each(function() {
-    //     kanban_Cassign.push($(this).val());
-    // });
-    // console.log(kanban_Cassign);
-    var kanban_Ccolor = document.getElementById("kanban_Ccolor").value;
-    // var kanban_Ccolor = [];
-    // $("input[name='kanban_Ccolor[]']").each(function() {
-    //     kanban_Ccolor.push($(this).val());
-    // });
-    // console.log(kanban_Ccolor);
-    var kanban_Cdec = document.getElementById("kanban_Cdec").value;
-    // var kanban_Cdec = [];
-    // $("input[name='kanban_Cdec[]']").each(function() {
-    //     kanban_Cdec.push($(this).val());
-    // });
-    // console.log(kanban_Cdec);
-    var kanban_Cpriority = document.getElementById("kanban_Cpriority").value;
-    // var kanban_Cpriority = [];
-    // $("select[name='kanban_Cpriority[]']").each(function() {
-    //     kanban_Cpriority.push($(this).val());
-    // });
-    // console.log(kanban_Cpriority);
-    var kanban_Cdead = document.getElementById("kanban_Cdead").value;
-    // var kanban_Cdead = [];
-    // $("input[name='kanban_Cdead[]']").each(function() {
-    //     kanban_Cdead.push($(this).val());
-    // });
-    // console.log(kanban_Cdead);
-    var kanban_Csubtask = document.getElementById("kanban_Csubtask").value;
-    // var kanban_Csubtask = [];
-    // $("input[name='kanban_Csubtask[]']").each(function() {
-    //     kanban_Csubtask.push($(this).val());
-    // });
-    // console.log(kanban_Csubtask);
-    var kanban_Ctag = document.getElementById("kanban_Ctag").value;
-    // var kanban_Ctag = [];
-    // $("input[name='kanban_Ctag[]']").each(function() {
-    //     kanban_Ctag.push($(this).val());
-    // });
-    // console.log(kanban_Ctag);
-    var kanban_Csize = document.getElementById("kanban_Csize").value;
-    // var kanban_Csize = [];
-    // $("input[name='kanban_Csize[]']").each(function() {
-    //     kanban_Csize.push($(this).val());
-    // });
-    // console.log(kanban_Csize);
-    var kanban_Cextlink = document.getElementById("kanban_Cextlink").value;
-    // var kanban_Cextlink = [];
-    // $("input[name='kanban_Cextlink[]']").each(function() {
-    //     kanban_Cextlink.push($(this).val());
-    // });
-    // console.log(kanban_Cextlink);
+    // var kanban_CName = document.getElementById("kanban_CName").value;
+    var kanban_CName = [];
+    $("input[name='kanban_CName[]']").each(function() {
+        kanban_CName.push($(this).val());
+    });
+    console.log(kanban_CName);
+    // var kanban_Ccolumn = document.getElementById("kanban_Ccolumn").value;
+    var kanban_Ccolumn = [];
+    $("select[name='kanban_Ccolumn[]']").each(function() {
+        kanban_Ccolumn.push($(this).val());
+    });
+    console.log(kanban_Ccolumn);
+    // var kanban_Clane = document.getElementById("kanban_Clane").value;
+    var kanban_Clane = [];
+    $("select[name='kanban_Clane[]']").each(function() {
+        kanban_Clane.push($(this).val());
+    });
+    console.log(kanban_Clane);
+    // var kanban_Cassign = document.getElementById("kanban_Cassign").value;
+    var kanban_Cassign = [];
+    $("input[name='kanban_Cassign[]']").each(function() {
+        kanban_Cassign.push($(this).val());
+    });
+    console.log(kanban_Cassign);
+    // var kanban_Ccolor = document.getElementById("kanban_Ccolor").value;
+    var kanban_Ccolor = [];
+    $("input[name='kanban_Ccolor[]']").each(function() {
+        kanban_Ccolor.push($(this).val());
+    });
+    console.log(kanban_Ccolor);
+    // var kanban_Cdec = document.getElementById("kanban_Cdec").value;
+    var kanban_Cdec = [];
+    $("input[name='kanban_Cdec[]']").each(function() {
+        kanban_Cdec.push($(this).val());
+    });
+    console.log(kanban_Cdec);
+    // var kanban_Cpriority = document.getElementById("kanban_Cpriority").value;
+    var kanban_Cpriority = [];
+    $("select[name='kanban_Cpriority[]']").each(function() {
+        kanban_Cpriority.push($(this).val());
+    });
+    console.log(kanban_Cpriority);
+    // var kanban_Cdead = document.getElementById("kanban_Cdead").value;
+    var kanban_Cdead = [];
+    $("input[name='kanban_Cdead[]']").each(function() {
+        kanban_Cdead.push($(this).val());
+    });
+    console.log(kanban_Cdead);
+    // var kanban_Csubtask = document.getElementById("kanban_Csubtask").value;
+    var kanban_Csubtask = [];
+    $("input[name='kanban_Csubtask[]']").each(function() {
+        kanban_Csubtask.push($(this).val());
+    });
+    console.log(kanban_Csubtask);
+    // var kanban_Ctag = document.getElementById("kanban_Ctag").value;
+    var kanban_Ctag = [];
+    $("input[name='kanban_Ctag[]']").each(function() {
+        kanban_Ctag.push($(this).val());
+    });
+    console.log(kanban_Ctag);
+    // var kanban_Csize = document.getElementById("kanban_Csize").value;
+    var kanban_Csize = [];
+    $("input[name='kanban_Csize[]']").each(function() {
+        kanban_Csize.push($(this).val());
+    });
+    console.log(kanban_Csize);
+    // var kanban_Cextlink = document.getElementById("kanban_Cextlink").value;
+    var kanban_Cextlink = [];
+    $("input[name='kanban_Cextlink[]']").each(function() {
+        kanban_Cextlink.push($(this).val());
+    });
+    console.log(kanban_Cextlink);
 
     document.getElementById("kanban_PName").value = "";
     document.getElementById("kanban_CName").value = ""
@@ -2092,16 +2085,16 @@ function selectHandler(){
 
   function kanbanEditSave(){
     var kanban_board = document.getElementById("kanban_board").value;
-    var kanbanCards = document.getElementById("kanbanCards").value;
+    var kanbanCardsEdit = document.getElementById("kanbanCardsEdit").value;
     var kanban_editTitle = document.getElementById("kanban_editTitle").value;
     var kanban_editdec = document.getElementById("kanban_editdec").value;
     var kanban_editcolor = document.getElementById("kanban_editcolor").value;
 
-    document.getElementById("kanbanCards").value = "";
+    document.getElementById("kanbanCardsEdit").value = "";
     document.getElementById("kanban_editTitle").value = ""
     document.getElementById("kanban_editdec").value = "";
     document.getElementById("kanban_editcolor").value = "";
-    google.script.run.kanbanEdit(kanban_board,kanbanCards,kanban_editTitle,kanban_editdec,kanban_editcolor);
+    google.script.run.kanbanEdit(kanban_board,kanbanCardsEdit,kanban_editTitle,kanban_editdec,kanban_editcolor);
   }
 
   /////////////// Kanban Delete /////////////////
@@ -2137,8 +2130,6 @@ function selectHandler(){
   function kanbanDeleteSave(){
     var kanban_board = document.getElementById("kanban_board").value;
     var kanbanCards = document.getElementById("kanbanCardsDelete").value;
-    console.log(kanbanCards);
-
     document.getElementById("kanbanCardsDelete").value = "";
     google.script.run.kanbanDelete(kanban_board,kanbanCards);
   }
@@ -2209,7 +2200,7 @@ function selectHandler(){
     }     //console.log(projectStages["lanes"]);
 
     
-    flowGrid += "		</table>";
+    flowGrid += "   </table>";
     flowGrid += "<div id=\"lane_container\">";
     flowGrid += "<div class=\"lane\" id=\"lane1\"><div class=\"lane_label\" id=\"lane_label1\"></div></div>";
     flowGrid += "<div class=\"lane\" id=\"lane2\"><div class=\"lane_label\" id=\"lane_label2\"></div></div>";
@@ -2227,20 +2218,20 @@ function selectHandler(){
   }
 
   function linkProjectFlow(stageArray){
-    	 
-	 uuid = getUuid();
-	 
-	// define common elements
-	var line = '<svg class="simple-flow simple-flow-defs">' +
-		'<defs>' +
-		  '<marker id="arrowhead-' + uuid + '" viewBox="0 0 10 10" refX="8" refY="5"' +
-			  'markerUnits="strokeWidth" markerWidth="8" markerHeight="6" orient="auto">' +
-			'<path d="M 0 0 L 10 5 L 0 10 z" stroke="none" fill="' + lineColour + '"/>' +
-		  '</marker>' +
-		'</defs>' +
-		'</svg>';
-	$('#pgrid_container').append(line);
-	 try{
+       
+   uuid = getUuid();
+   
+  // define common elements
+  var line = '<svg class="simple-flow simple-flow-defs">' +
+    '<defs>' +
+      '<marker id="arrowhead-' + uuid + '" viewBox="0 0 10 10" refX="8" refY="5"' +
+        'markerUnits="strokeWidth" markerWidth="8" markerHeight="6" orient="auto">' +
+      '<path d="M 0 0 L 10 5 L 0 10 z" stroke="none" fill="' + lineColour + '"/>' +
+      '</marker>' +
+    '</defs>' +
+    '</svg>';
+  $('#pgrid_container').append(line);
+   try{
     //  console.log(stageArray);
 
      for (var i=0; i<stageArray.length-1; i++){
@@ -2249,10 +2240,10 @@ function selectHandler(){
 
      }
 
-		
-	 }catch(e){
-		 console.log(e);
-	 }
+    
+   }catch(e){
+     console.log(e);
+   }
   }
 
   function getProjectWorkflow(projectType){

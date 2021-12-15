@@ -1,5 +1,5 @@
 ////////////// Kanbanize Global Variables ////////////////
-Logger.log("Hello World");
+
 const apiUrl = 'https://cloudd8.kanbanize.com/index.php/api/kanbanize/';
 const apiKey_kanban = '84xJL5je9la2AjhoZxJuNorV6R3iFhvZo6ax653k';
 
@@ -424,7 +424,6 @@ function addActions(proId,aID,sA_date,eA_date,actionDuration,actionName,actionTy
 function kanbanFirst(kanban_board,kanban_PName,kanban_CName,kanban_Pcolumn,kanban_Plane,kanban_Ccolumn,kanban_Clane,kanban_Passign,kanban_Cassign,kanban_Pcolor,kanban_Ccolor,kanban_Pdec,kanban_Cdec,kanban_Ppriority,kanban_Cpriority,kanban_Pdead,kanban_Cdead,kanban_PsubtaskArray,kanban_CsubtaskArray,kanban_Ptag,kanban_Ctag,kanban_Psize,kanban_Csize,kanban_Pextlink,kanban_Cextlink){
 
   var pcolor = kanban_Pcolor.substring(1);
-  var ccolor = kanban_Ccolor.substring(1);
 
   ///// Get Board ID //////
 
@@ -523,84 +522,21 @@ function kanbanFirst(kanban_board,kanban_PName,kanban_CName,kanban_Pcolumn,kanba
         Logger.log(response);
       }
 
+      var url = "https://docs.google.com/spreadsheets/d/1yTa9oeptN5vMC6a_RYd0Y9g6f9159mvDeMjdz7wTnfY/edit#gid=647681722";
+      var ss = SpreadsheetApp.openByUrl(url);
+      var webAppSheet = ss.getSheetByName("Kanban Parent");
+      var lastRow = webAppSheet.getLastRow();
+      const parentTaskId = parseInt(lastRow);
+      webAppSheet.appendRow([parentTaskId,globVar,kanban_PName,kanban_Pcolumn,kanban_Plane,kanban_Passign,kanban_Pcolor,kanban_Pdec,kanban_Ppriority,kanban_Pdead,kanban_PsubtaskArray,kanban_Ptag,kanban_Psize,kanban_Pextlink]);
+
       /////////////////// Child /////////////////////
-      
-      var url = apiUrl + 'create_new_task//format/json';
-      var data = {"boardid":boardID, "title":kanban_CName,"lane":kanban_Clane,"assignee":kanban_Cassign,"color":ccolor,"description":kanban_Cdec,"priority":kanban_Cpriority,"deadline":kanban_Cdead,"tags":kanban_Ctag,"size":kanban_Csize,"extlink":kanban_Cextlink};
-      var payload = JSON.stringify(data);
-      var options = {
-        'muteHttpExceptions': true,
-        'method' : 'post',
-        'contentType': 'application/json',
-        "headers" : {
-          "apikey" : apiKey_kanban,
-          "cache-control": "no-cache"
-        },
-        "payload" : payload
-      };
-      var response = UrlFetchApp.fetch(url,options);
 
-      var url = apiUrl + 'get_all_tasks//format/json';
-      var data = {"boardid":boardID};
-      var payload = JSON.stringify(data);
-      var options = {
-        'muteHttpExceptions': true,
-        'method' : 'post',
-        'contentType': 'application/json',
-        "headers" : {
-          "apikey" : apiKey_kanban,
-          "cache-control": "no-cache"
-        },
-        "payload" : payload
-      };
-      var response = UrlFetchApp.fetch(url,options);
-      var final_data = JSON.parse(response.getContentText());
+      var totalChildTask = kanban_CName.length;
 
-      var globVarchild
-      for (let i = 0; i < final_data.length; i++){
-        // Logger.log(data[i]);
-        if (final_data[i].title == kanban_CName){
-          globVarchild = final_data[i].taskid;
-
-          var url = apiUrl + 'edit_link//format/json';
-          var data = {"taskid":globVar, "action":"set", "linkedid":globVarchild, "type":"parent"};
-          var payload = JSON.stringify(data);
-          var options = {
-            'muteHttpExceptions': true,
-            'method' : 'post',
-            'contentType': 'application/json',
-            "headers" : {
-              "apikey" : apiKey_kanban,
-              "cache-control": "no-cache"
-            },
-            "payload" : payload
-          };
-          var response = UrlFetchApp.fetch(url,options);
-
-          var url = apiUrl + 'move_task//format/json';
-          var data = {"boardid":boardID, "taskid":globVarchild, "column":kanban_Ccolumn};
-          var payload = JSON.stringify(data);
-          var options = {
-            'muteHttpExceptions': true,
-            'method' : 'post',
-            'contentType': 'application/json',
-            "headers" : {
-              "apikey" : apiKey_kanban,
-              "cache-control": "no-cache"
-            },
-            "payload" : payload
-          };
-          var response = UrlFetchApp.fetch(url,options);
-          // Logger.log(response);
-          Logger.log(final_data[i].taskid);
-        }
-      }
-
-      const kanban_Csubtask = kanban_CsubtaskArray.split(",");
-      console.log(kanban_Csubtask);
-      for (let i = 0; i < kanban_Csubtask.length; i++){
-        var url = apiUrl + 'add_subtask//format/json';
-        var data = {"taskparent":globVarchild, "title":kanban_Csubtask[i]};
+      for (let j = 0; j < totalChildTask; j++){
+        var ccolor = kanban_Ccolor[j].substring(1);
+        var url = apiUrl + 'create_new_task//format/json';
+        var data = {"boardid":boardID, "title":kanban_CName[j],"lane":kanban_Clane[j],"assignee":kanban_Cassign[j],"color":ccolor,"description":kanban_Cdec[j],"priority":kanban_Cpriority[j],"deadline":kanban_Cdead[j],"tags":kanban_Ctag[j],"size":kanban_Csize[j],"extlink":kanban_Cextlink[j]};
         var payload = JSON.stringify(data);
         var options = {
           'muteHttpExceptions': true,
@@ -613,7 +549,88 @@ function kanbanFirst(kanban_board,kanban_PName,kanban_CName,kanban_Pcolumn,kanba
           "payload" : payload
         };
         var response = UrlFetchApp.fetch(url,options);
-        Logger.log(response);
+
+        var url = apiUrl + 'get_all_tasks//format/json';
+        var data = {"boardid":boardID};
+        var payload = JSON.stringify(data);
+        var options = {
+          'muteHttpExceptions': true,
+          'method' : 'post',
+          'contentType': 'application/json',
+          "headers" : {
+            "apikey" : apiKey_kanban,
+            "cache-control": "no-cache"
+          },
+          "payload" : payload
+        };
+        var response = UrlFetchApp.fetch(url,options);
+        var final_data = JSON.parse(response.getContentText());
+
+        var globVarchild
+        for (let i = 0; i < final_data.length; i++){
+          if (final_data[i].title == kanban_CName[j]){
+            globVarchild = final_data[i].taskid;
+
+            var url = apiUrl + 'edit_link//format/json';
+            var data = {"taskid":globVar, "action":"set", "linkedid":globVarchild, "type":"parent"};
+            var payload = JSON.stringify(data);
+            var options = {
+              'muteHttpExceptions': true,
+              'method' : 'post',
+              'contentType': 'application/json',
+              "headers" : {
+                "apikey" : apiKey_kanban,
+                "cache-control": "no-cache"
+              },
+              "payload" : payload
+            };
+            var response = UrlFetchApp.fetch(url,options);
+
+            var url = apiUrl + 'move_task//format/json';
+            var data = {"boardid":boardID, "taskid":globVarchild, "column":kanban_Ccolumn[j]};
+            var payload = JSON.stringify(data);
+            var options = {
+              'muteHttpExceptions': true,
+              'method' : 'post',
+              'contentType': 'application/json',
+              "headers" : {
+                "apikey" : apiKey_kanban,
+                "cache-control": "no-cache"
+              },
+              "payload" : payload
+            };
+            var response = UrlFetchApp.fetch(url,options);
+            // Logger.log(response);
+            Logger.log(final_data[i].taskid);
+          }
+        }
+
+        const kanban_Csubtask = kanban_CsubtaskArray[j].split(",");
+        for (let i = 0; i < kanban_Csubtask.length; i++){
+          var url = apiUrl + 'add_subtask//format/json';
+          var data = {"taskparent":globVarchild, "title":kanban_Csubtask[i]};
+          var payload = JSON.stringify(data);
+          var options = {
+            'muteHttpExceptions': true,
+            'method' : 'post',
+            'contentType': 'application/json',
+            "headers" : {
+              "apikey" : apiKey_kanban,
+              "cache-control": "no-cache"
+            },
+            "payload" : payload
+          };
+          var response = UrlFetchApp.fetch(url,options);
+          Logger.log(response);
+        }
+
+        var url = "https://docs.google.com/spreadsheets/d/1yTa9oeptN5vMC6a_RYd0Y9g6f9159mvDeMjdz7wTnfY/edit#gid=1556046532";
+        var ss = SpreadsheetApp.openByUrl(url);
+        var webAppSheet = ss.getSheetByName("Kanban Child");
+        var lastRow = webAppSheet.getLastRow();
+        const childTaskId = parseInt(lastRow);
+        webAppSheet.appendRow([childTaskId,globVarchild,parentTaskId,kanban_CName[j],kanban_Ccolumn[j],kanban_Clane[j],kanban_Cassign[j],kanban_Ccolor[j],kanban_Cdec[j],kanban_Cpriority[j],kanban_Cdead[j],kanban_CsubtaskArray[j],kanban_Ctag[j],kanban_Csize[j],kanban_Cextlink[j]]);
+
       }
     }
   }
@@ -621,7 +638,7 @@ function kanbanFirst(kanban_board,kanban_PName,kanban_CName,kanban_Pcolumn,kanba
 
 ////////////////////// Kanban Edit Cards ////////////////////
 
-function kanbanEdit(kanban_board,kanbanCards,kanban_editTitle,kanban_editdec,kanban_editcolor){
+function kanbanEdit(kanban_board,kanbanCardsEdit,kanban_editTitle,kanban_editdec,kanban_editcolor){
 
   var card_color = kanban_editcolor.substring(1);
 
@@ -664,7 +681,7 @@ function kanbanEdit(kanban_board,kanbanCards,kanban_editTitle,kanban_editdec,kan
 
   var card_ID;
   for (let i = 0; i < final_data.length; i++){
-    if(kanbanCards == final_data[i].title){
+    if(kanbanCardsEdit == final_data[i].title){
       card_ID = final_data[i].taskid;
     }
   }
@@ -683,6 +700,32 @@ function kanbanEdit(kanban_board,kanbanCards,kanban_editTitle,kanban_editdec,kan
     "payload" : payload
   };
   var response = UrlFetchApp.fetch(url,options);
+
+  var urlParent = "https://docs.google.com/spreadsheets/d/1yTa9oeptN5vMC6a_RYd0Y9g6f9159mvDeMjdz7wTnfY/edit#gid=647681722";
+  var ssParent = SpreadsheetApp.openByUrl(urlParent);
+  var parentSheet = ssParent.getSheetByName("Kanban Parent");
+  var lastRowParent = parentSheet.getLastRow();
+  for(var i = 2; i <= lastRowParent; i++){
+    var tempParent = parentSheet.getRange('B'+i).getValue();
+    if (tempParent == card_ID){
+      parentSheet.getRange('C'+i).setValue(kanban_editTitle);
+      parentSheet.getRange('H'+i).setValue(kanban_editdec);
+      parentSheet.getRange('G'+i).setValue(kanban_editcolor);
+    }
+  }
+
+  var urlChild = "https://docs.google.com/spreadsheets/d/1yTa9oeptN5vMC6a_RYd0Y9g6f9159mvDeMjdz7wTnfY/edit#gid=647681722";
+  var ssChild = SpreadsheetApp.openByUrl(urlChild);
+  var childSheet = ssChild.getSheetByName("Kanban Child");
+  var lastRowParent = childSheet.getLastRow();
+  for(var i = 2; i <= lastRowParent; i++){
+    var tempChild = childSheet.getRange('B'+i).getValue();
+    if (tempChild == card_ID){
+      childSheet.getRange('D'+i).setValue(kanban_editTitle);
+      childSheet.getRange('I'+i).setValue(kanban_editdec);
+      childSheet.getRange('H'+i).setValue(kanban_editcolor);
+    }
+  }
 
 }
 
@@ -748,6 +791,28 @@ function kanbanDelete(kanban_board,kanbanCards){
     "payload" : payload
   };
   var response = UrlFetchApp.fetch(url,options);
+
+  var urlParent = "https://docs.google.com/spreadsheets/d/1yTa9oeptN5vMC6a_RYd0Y9g6f9159mvDeMjdz7wTnfY/edit#gid=647681722";
+  var ssParent = SpreadsheetApp.openByUrl(urlParent);
+  var parentSheet = ssParent.getSheetByName("Kanban Parent");
+  var lastRowParent = parentSheet.getLastRow();
+  for(var i = 2; i <= lastRowParent; i++){
+    var tempParent = parentSheet.getRange('B'+i).getValue();
+    if (tempParent == card_ID){
+      parentSheet.deleteRow(i);
+    }
+  }
+
+  var urlChild = "https://docs.google.com/spreadsheets/d/1yTa9oeptN5vMC6a_RYd0Y9g6f9159mvDeMjdz7wTnfY/edit#gid=647681722";
+  var ssChild = SpreadsheetApp.openByUrl(urlChild);
+  var childSheet = ssChild.getSheetByName("Kanban Child");
+  var lastRowParent = childSheet.getLastRow();
+  for(var i = 2; i <= lastRowParent; i++){
+    var tempChild = childSheet.getRange('B'+i).getValue();
+    if (tempChild == card_ID){
+      childSheet.deleteRow(i);
+    }
+  }
 
 }
 
